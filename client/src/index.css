@@ -1,0 +1,354 @@
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #0d0d0d;
+  color: #f0f0f0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  /* For web app feel */
+}
+
+/* App Container (Mobile Viewport) */
+#root {
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  background-color: #1a1a1a;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography Options */
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* Common UI Elements */
+.btn {
+  background-color: #d11a2a;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn:hover {
+  background-color: #ff2a3a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(209, 26, 42, 0.4);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  background-color: #555;
+  color: #888;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Input Styles */
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: white;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #d11a2a;
+  box-shadow: 0 0 0 2px rgba(209, 26, 42, 0.25);
+}
+
+/* Layout Helpers */
+.screen-container {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+}
+
+/* Elevator Styles */
+.elevator-board {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.floor-btn {
+  background-color: #333;
+  color: #ccc;
+  border: 2px solid #555;
+  padding: 16px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.floor-btn:hover {
+  background-color: #444;
+  border-color: #888;
+  color: white;
+}
+
+.floor-btn.selected {
+  background-color: #d11a2a;
+  border-color: #ff4a5a;
+  color: white;
+  box-shadow: 0 0 15px rgba(209, 26, 42, 0.6), inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Status Text */
+.status-text {
+  font-size: 1.2rem;
+  color: #aaa;
+  margin-bottom: 16px;
+}
+
+/* Alerts and Highlights */
+.highlight-role {
+  font-size: 2rem;
+  color: #d11a2a;
+  text-transform: uppercase;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+/* Horror FX */
+@keyframes flicker {
+  0% {
+    opacity: 1;
+  }
+
+  3% {
+    opacity: 0.4;
+  }
+
+  6% {
+    opacity: 1;
+  }
+
+  7% {
+    opacity: 0.4;
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  9% {
+    opacity: 1;
+  }
+
+  10% {
+    opacity: 0.1;
+  }
+
+  11% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.fx-flicker {
+  animation: flicker 4s infinite alternate;
+}
+
+/* Background Animations for Game UI */
+@keyframes slowZoom {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* pseudo-element hack to animate background image naturally */
+.game-bg-anim::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  z-index: -1;
+  animation: slowZoom 15s ease-in-out infinite;
+}
+
+/* Creeper animation (hand-drawn image zooming in) */
+@keyframes creepForward {
+  0% {
+    transform: scale(0.1) translateY(50px);
+    opacity: 0;
+  }
+
+  20% {
+    transform: scale(0.4) translateY(30px);
+    opacity: 1;
+  }
+
+  85% {
+    transform: scale(1.2) translateY(0px);
+    opacity: 1;
+  }
+
+  95% {
+    transform: scale(4.5) translateY(20px) rotate(-5deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 30px red);
+  }
+
+  100% {
+    transform: scale(6) translateY(30px) rotate(3deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 50px red) contrast(150%);
+  }
+}
+
+.creep-forward {
+  animation: creepForward 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards;
+}
+
+/* Elevator Doors Animation */
+.door-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 9999;
+  background-color: #000;
+  /* Behind the doors */
+}
+
+.door-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background-color: #5a5a5a;
+  background-image: linear-gradient(90deg, #444, #666, #444);
+  border: 2px solid #333;
+  transition: transform 3s ease-in-out;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  z-index: 20;
+}
+
+.door-left {
+  left: 0;
+  transform-origin: left;
+}
+
+.door-right {
+  right: 0;
+  transform-origin: right;
+}
+
+/* When opening */
+.doors-opening .door-left {
+  transform: translateX(-100%);
+}
+
+.doors-opening .door-right {
+  transform: translateX(100%);
+}
+
+/* First person approach animation */
+@keyframes walkTowards {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+
+  16% {
+    transform: scale(1.05) translateY(-8px);
+  }
+
+  33% {
+    transform: scale(1.1) translateY(0);
+  }
+
+  50% {
+    transform: scale(1.15) translateY(-8px);
+  }
+
+  66% {
+    transform: scale(1.2) translateY(0);
+  }
+
+  83% {
+    transform: scale(1.25) translateY(-8px);
+  }
+
+  100% {
+    transform: scale(1.3) translateY(0);
+  }
+}
+
+.walk-towards {
+  animation: walkTowards 6.5s linear forwards;
+}
