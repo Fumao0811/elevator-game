@@ -20,13 +20,12 @@ function Game({ appState }: Props) {
 
     const [selectTimeLeft, setSelectTimeLeft] = useState(30);
 
-    // ラウンド数が変わった際や初期表示時にラウンド開始スプラッシュを表示
     useEffect(() => {
         if (room?.round) {
             setShowRoundSplash(true);
             const timer = setTimeout(() => {
                 setShowRoundSplash(false);
-            }, 2000); // 2秒間表示
+            }, 2000); 
             return () => clearTimeout(timer);
         }
     }, [room?.round]);
@@ -37,7 +36,6 @@ function Game({ appState }: Props) {
             return;
         }
 
-        // 両者準備完了時のイベント（3秒カウントダウン開始）
         socket.on('both_ready_countdown', () => {
             setIsWaiting(false);
             setShowCountdown(true);
@@ -52,9 +50,7 @@ function Game({ appState }: Props) {
             }, 1000);
         });
 
-        // サーバーから結果（REVEAL）が届く
         socket.on('round_result', (updatedRoom) => {
-            // 即座に遷移せず、カウントダウンと扉アニメーションに制御を委譲する
             setPendingResultRoom(updatedRoom);
         });
 
@@ -71,16 +67,13 @@ function Game({ appState }: Props) {
 
     if (!room) return null;
 
-    // 自分の役割を取得
     const myPlayerInfo = room.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room.players.find((p: any) => p.nickname !== nickname);
     const isEscape = myPlayerInfo?.role === 'ESCAPE';
 
-    // 直前に自分が選んだ階層（再選択禁止用）
-    // 逃げる人が前回選んだ階層を、両者とも選べないようにする
     const forbiddenFloor = isEscape ? myPlayerInfo?.lastEscapedFloor : otherPlayerInfo?.lastEscapedFloor;
 
-    const floors = [1, 2, 3, 4, 5]; // 10階から5階に減らしゲームバランスを調整
+    const floors = [1, 2, 3, 4, 5]; 
 
     const handleFloorSelect = (floor: number) => {
         if (isWaiting || showCountdown || floor === forbiddenFloor) return;
@@ -90,12 +83,10 @@ function Game({ appState }: Props) {
         setIsWaiting(true);
     };
 
-    // 階層選択の15秒タイマー
     useEffect(() => {
         if (isWaiting || showCountdown || pendingResultRoom) return;
 
         if (selectTimeLeft <= 0) {
-            // 時間切れで禁止されていない階層からランダム選択
             const availableFloors = floors.filter(f => f !== forbiddenFloor);
             const fallbackFloor = availableFloors.length > 0
                 ? availableFloors[Math.floor(Math.random() * availableFloors.length)]
@@ -111,47 +102,39 @@ function Game({ appState }: Props) {
         return () => clearTimeout(timerId);
     }, [selectTimeLeft, isWaiting, showCountdown, pendingResultRoom, forbiddenFloor]);
 
-    // カウントダウンと扉アニメーションの制御
     useEffect(() => {
         if (showCountdown && countdownNum === 0 && !doorsOpening && pendingResultRoom) {
-            // OPEN! となったタイミングで扉を開くフラグを立てる
             setDoorsOpening(true);
 
-            // 扉が徐々に開ききってから（約3秒後）、Result画面へ結果を同期・遷移させる
             setTimeout(() => {
                 appState.setRoom(pendingResultRoom);
                 navigate('/result');
-            }, 3500); // アニメーション3.0秒 + 余韻0.5秒
+            }, 3500); 
         }
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
 
     if (showCountdown) {
-        // カウントダウン中および扉開閉演出画面
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
 
         return (
             <div className="screen-container" style={{ padding: 0, position: 'relative' }}>
-                {/* エレベーター全体・左右の扉パネル */}
                 <div className={`door-container ${doorsOpening ? 'doors-opening' : ''} ${!isEscape ? 'walk-towards' : ''}`}>
 
-                    {/* 扉の奥（判定結果の景色） */}
                     {countdownNum <= 0 && pendingResultRoom && (
                         <div style={{
                             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_empty.png)`, // 絵が見やすいように中央だけ薄い照明を追加
+                            backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_empty.png)`, 
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             zIndex: 10,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            // 待ち伏せ側（外にいる）が勝った場合は、この枠自体がズームして中に突入する演出
                             animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none'
                         }}>
-                            {/* 逃げる側（中にいる）で捕まった場合、AIの体＋相手の絵(顔)が合成されて迫ってくる */}
+                            {/* ★逃げる側（中にいる）で捕まった場合のアニメーション */}
                             {isEscape && isCaughtResult && otherPlayerInfo?.drawnImage && (
-                                <div className="creep-forward-inside" style={{ position: 'relative', width: '300px', height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    {/* 下層: AIが生成した首なしの走る体（最前面近くに強制配置） */}
+                                <div className="creep-forward-inside" style={{ position: 'relative', width: '300px', height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
                                     <img
                                         src="/body.png"
                                         alt="scary body"
@@ -162,20 +145,25 @@ function Game({ appState }: Props) {
                                         alt="scare face"
                                         style={{
                                             position: 'absolute',
-                                            top: '0px',
+                                            top: '-30px', 
                                             width: '80%',
                                             zIndex: 9999,
-                                            mixBlendMode: 'multiply',
+                                            mixBlendMode: 'normal', 
                                             filter: 'drop-shadow(0 0 15px red) contrast(1.2)',
-                                            animation: 'fx-flicker 0.2s infinite' // 顔だけ小刻みに震えさせる
+                                            animation: 'fx-flicker 0.2s infinite' 
+                                        }}
+                                        onLoad={() => {
+                                            const audio = new Audio('/scare_sound.mp3');
+                                            audio.volume = 0.5;
+                                            audio.play().catch(e => console.log('Audio autoplay prevented'));
                                         }}
                                     />
                                 </div>
                             )}
 
-                            {/* 待ち伏せ側（外にいる）で捕まえた場合、奥で体＋顔が震えている（そこに自分が突進する） */}
+                            {/* ★待ち伏せ側（外にいる）で捕まえた場合のアニメーション */}
                             {!isEscape && isCaughtResult && otherPlayerInfo?.drawnImage && (
-                                <div style={{ position: 'relative', width: '200px', height: '260px', animation: 'fx-flicker 0.5s infinite' }}>
+                                <div style={{ position: 'relative', width: '200px', height: '260px', animation: 'fx-flicker 0.5s infinite', overflow: 'visible' }}>
                                     <img
                                         src="/body.png"
                                         alt="scary body target"
@@ -186,12 +174,17 @@ function Game({ appState }: Props) {
                                         alt="target face"
                                         style={{
                                             position: 'absolute',
-                                            top: '0px',
-                                            left: '20%',
+                                            top: '-20px',
+                                            left: '10%',
                                             width: '80%',
                                             zIndex: 9999,
-                                            mixBlendMode: 'multiply',
+                                            mixBlendMode: 'normal',
                                             filter: 'drop-shadow(0 0 10px rgba(255,0,0,0.5))'
+                                        }}
+                                        onLoad={() => {
+                                            const audio = new Audio('/scare_sound.mp3');
+                                            audio.volume = 0.5;
+                                            audio.play().catch(e => console.log('Audio autoplay prevented'));
                                         }}
                                     />
                                 </div>
@@ -202,7 +195,6 @@ function Game({ appState }: Props) {
                     <div className="door-panel door-left"></div>
                     <div className="door-panel door-right"></div>
 
-                    {/* 中か外かを明確にする状況テキスト */}
                     <div style={{
                         position: 'absolute', top: '10%', left: '0', right: '0', textAlign: 'center', zIndex: 300,
                         animation: 'fadeIn 0.5s ease forwards'
@@ -223,14 +215,13 @@ function Game({ appState }: Props) {
                         </h2>
                     </div>
 
-                    {/* カウントダウン表示（扉の上） */}
                     <h1
                         className="fx-flicker"
                         style={{
                             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                             fontSize: '5rem', color: '#ff2a3a', zIndex: 200, pointerEvents: 'none',
                             textShadow: '0 0 10px #000, 0 0 20px #ff0000',
-                            opacity: doorsOpening ? 0 : 1, // 開き始めたら消す
+                            opacity: doorsOpening ? 0 : 1, 
                             transition: 'opacity 0.2s'
                         }}
                     >
@@ -241,7 +232,6 @@ function Game({ appState }: Props) {
         );
     }
 
-    // 背景画像の設定
     const bgImage = isEscape ? '/bg_inside.png' : '/bg_outside.png';
 
     return (
@@ -257,7 +247,6 @@ function Game({ appState }: Props) {
             }}
         >
 
-            {/* ラウンド開始時のスプラッシュ表示 */}
             {showRoundSplash && (
                 <div style={{
                     position: 'absolute',
@@ -290,7 +279,6 @@ function Game({ appState }: Props) {
                 </div>
             )}
 
-            {/* ヘッダー・スコア情報（上部に集約） */}
             <div style={{
                 width: '100%', maxWidth: '400px',
                 display: 'flex', flexDirection: 'column',
@@ -311,7 +299,6 @@ function Game({ appState }: Props) {
                 </div>
             </div>
 
-            {/* タイマー表示 */}
             {!isWaiting && !showCountdown && !pendingResultRoom && (
                 <div style={{ textAlign: 'center', marginTop: '10px' }}>
                     <h2 style={{ color: selectTimeLeft <= 5 ? '#ff4a5a' : '#fff', fontSize: '1.5rem', margin: 0 }}>
@@ -320,7 +307,6 @@ function Game({ appState }: Props) {
                 </div>
             )}
 
-            {/* 役割表示 */}
             <div style={{ margin: '20px 0' }}>
                 <p style={{ color: '#aaa', fontSize: '0.9rem' }}>あなたは</p>
                 <h2 className="highlight-role">
@@ -333,7 +319,6 @@ function Game({ appState }: Props) {
                 </p>
             </div>
 
-            {/* 階層選択（エレベーターボタン） */}
             <div className={`elevator-board ${isWaiting ? 'disabled' : ''}`}>
                 {floors.map((floor) => {
                     const isForbidden = floor === forbiddenFloor;
@@ -354,14 +339,12 @@ function Game({ appState }: Props) {
                 })}
             </div>
 
-            {/* 待機表示 */}
             {isWaiting && (
                 <div style={{ padding: '10px', color: '#fff', animation: 'pulse 1.5s infinite' }}>
                     相手の選択を待っています...
                 </div>
             )}
 
-            {/* これまでの履歴（ログ）表示 */}
             {room.history && room.history.length > 0 && (
                 <div style={{
                     marginTop: 'auto',

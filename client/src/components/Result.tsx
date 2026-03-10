@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
 
@@ -9,46 +9,54 @@ interface Props {
 function Result({ appState }: Props) {
     const navigate = useNavigate();
     const { socket, room, nickname } = appState;
-    const [showResult, setShowResult] = useState(false);
+
+    const [showScare, setShowScare] = useState(false);
+    const [scareDone, setScareDone] = useState(false);
+    const [isWaitingNext, setIsWaitingNext] = useState(false);
+    
+    // スケア用音声の用意
+    const scareAudioRef = useRef<HTMLAudioElement | null>(null);
 
     // 次ラウンドへの準備周りのステート
     const [timeLeft, setTimeLeft] = useState(5);
-    const [isWaitingNext, setIsWaitingNext] = useState(false);
+
+    // 自分の役割を取得
+    const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
+    const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
+
+    const isEscape = myPlayerInfo?.role === 'ESCAPE';
+    const isCaught = room?.lastRoundCaught;
+    const isFinished = room?.status === 'FINISHED';
 
     useEffect(() => {
-        if (!room) {
+        if (!socket || !room) {
             navigate('/');
             return;
         }
 
-        // 捕まった場合はジャンプスケアの絵（ドンッ！）を1秒間だけ表示して詳細結果へ
-        // 逃げ切った場合はジャンプスケアなしで即座に詳細結果へ
-        if (room.lastRoundCaught) {
-            const timer = setTimeout(() => {
-                setShowResult(true);
-            }, 1000);
-            return () => clearTimeout(timer);
+        // 逃げる側が捕まった、または待つ側が捕まえた場合、共通でジャンプスケア判定へ
+        if (isCaught) {
+            setShowScare(true);
+            
+            // 音声再生（ブラウザ制限で鳴らない場合もあるが意図的に仕込む）
+            if (!scareAudioRef.current) {
+                scareAudioRef.current = new Audio('/scare_sound.mp3'); 
+                scareAudioRef.current.volume = 1.0;
+            }
+            scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
+
+            // ジャンプスケアの表示時間は長めに（1.5秒）
+            setTimeout(() => {
+                setShowScare(false);
+                setScareDone(true);
+            }, 1500);
+
         } else {
-            setShowResult(true);
+            // 捕まっていない場合はスケア演出なし
+            setScareDone(true);
         }
-    }, [room, navigate]);
 
-    // 結果表示後の5秒カウントダウン
-    const isFinished = room?.status === 'FINISHED';
-    useEffect(() => {
-        if (!showResult || isFinished) return;
-        if (timeLeft <= 0) return;
-
-        const timerId = setTimeout(() => {
-            setTimeLeft(prev => prev - 1);
-        }, 1000);
-        return () => clearTimeout(timerId);
-    }, [showResult, timeLeft, isFinished]);
-
-    // 次ラウンド同期進行用ソケットイベント
-    useEffect(() => {
-        if (!socket) return;
-
+        // 次ラウンド同期進行用ソケットイベント
         socket.on('waiting_for_opponent_next_round', () => {
             setIsWaitingNext(true);
         });
@@ -58,19 +66,45 @@ function Result({ appState }: Props) {
             navigate('/game');
         });
 
+        // 最終スコア画面へ（全ラウンド終了時）
+        socket.on('game_finished', (updatedRoom: any) => {
+            appState.setRoom(updatedRoom);
+            alert('ゲーム終了！最終結果を確認します。');
+            navigate('/');
+        });
+
         return () => {
             socket.off('waiting_for_opponent_next_round');
             socket.off('start_next_round');
+            socket.off('game_finished');
         };
-    }, [socket, appState, navigate]);
+    }, [socket, room, isCaught, navigate, appState]);
 
-    if (!room) return null;
+    // 結果表示後の5秒カウントダウン
+    useEffect(() => {
+        if (showScare || isFinished) return;
+        if (timeLeft <= 0) return;
 
-    const myPlayerInfo = room.players.find((p: any) => p.nickname === nickname);
-    const otherPlayerInfo = room.players.find((p: any) => p.nickname !== nickname);
+        const timerId = setTimeout(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+        return () => clearTimeout(timerId);
+    }, [showScare, timeLeft, isFinished]);
 
-    // サーバーが計算した前ラウンドの捕獲結果をそのまま利用する
-    const isCaught = room.lastRoundCaught;
+
+    if (!room || !myPlayerInfo) return null;
+
+    const handleNextRound = () => {
+        if (!socket) return;
+        if (timeLeft > 0 || isWaitingNext) return;
+        socket.emit('ready_next_round', { roomId: room.roomId });
+        setIsWaitingNext(true);
+    };
+
+    const handleBackToTitle = () => {
+        appState.setRoom(null);
+        navigate('/');
+    };
 
     // 自分視点でのテキスト
     // 前のラウンドでの自分の役割を判定 (直後にroleが入れ替わっているため逆転させる)
@@ -109,44 +143,28 @@ function Result({ appState }: Props) {
         else finalResultText = '💀 LOSER 💀';
     }
 
-    const handleNext = () => {
-        if (isFinished) {
-            appState.setRoom(null);
-            navigate('/');
-        } else {
-            if (timeLeft > 0 || isWaitingNext) return;
-            socket?.emit('ready_next_round', { roomId: room.roomId });
-            setIsWaitingNext(true);
-        }
+    // Twitterシェア用のテキスト生成
+    const generateShareText = () => {
+        const title = "🚪 エレベーター心理戦ゲーム\n";
+        const result = isFinished 
+            ? `最終スコア: ${myPlayerInfo.score}pt (${finalResultText})\n`
+            : `【今回の結果】${resultText} ${resultSubText}\n`;
+        const url = window.location.origin; 
+        
+        return encodeURIComponent(title + result + "\n#エレベーター心理戦 #ブラウザゲーム\n" + url);
     };
 
-    const handleShare = () => {
-        const url = encodeURIComponent(window.location.origin);
-        let text = "";
-
-        if (isFinished) {
-            text = `「エレベーター心理戦」をプレイしました！最終スコア: ${myPlayerInfo.score}pt\n${finalResultText}\n`;
-        } else {
-            text = `「エレベーター心理戦」をプレイ中！\n【今回の結果】${resultText}\n${resultSubText}\n`;
-        }
-        text = encodeURIComponent(text);
-
-        // X(旧Twitter)のシェアURL構築
-        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-    };
+    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${generateShareText()}`;
 
     return (
-        <div className="screen-container" style={{
-            backgroundColor: showResult ? '#1a1a1a' : '#fff',
-            transition: 'background-color 0.1s'
-        }}>
-            {!showResult ? (
-                isCaught && (
-                    // ドンッ！というジャンプスケア演出（相手の描いた絵）
+        <div className="screen-container">
+            {showScare ? (
+                // --- ジャンプスケア演出（全画面） ---
+                (
                     <div style={{
+                        backgroundColor: '#000',
                         width: '100vw',
                         height: '100vh',
-                        backgroundColor: '#000',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -157,24 +175,24 @@ function Result({ appState }: Props) {
                         animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite'
                     }}>
                         {otherPlayerInfo.drawnImage && (
-                            <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
                                 {/* 下層: AI生成の首なし体 */}
                                 <img
                                     src="/body.png"
                                     alt="scary body"
                                     style={{ position: 'absolute', bottom: '-20%', width: '180%', height: '160%', objectFit: 'contain', zIndex: 9998, filter: 'drop-shadow(0 0 40px red)', opacity: 1, display: 'block' }}
                                 />
-                                {/* 上層: 手描きの顔 */}
+                                {/* 上層: 手描きの顔（体の首元に合うように位置を調整） */}
                                 <img
                                     src={otherPlayerInfo.drawnImage}
                                     alt="Scare Face"
                                     style={{
                                         position: 'absolute',
-                                        top: '10%',
-                                        width: '100%',
+                                        top: '-15%', // 少し上にはみ出させる
+                                        width: '80%', // 顔のサイズを体に合わせる
                                         zIndex: 9999,
-                                        mixBlendMode: 'multiply',
-                                        filter: 'drop-shadow(0 0 30px red) contrast(200%)',
+                                        mixBlendMode: 'normal', // 透過PNGが綺麗に乗るようにmultiplyからnormalに変更
+                                        filter: 'drop-shadow(0 0 30px red) contrast(150%)',
                                         animation: 'fx-flicker 0.1s infinite'
                                     }}
                                 />
@@ -210,23 +228,23 @@ function Result({ appState }: Props) {
                         </div>
                     </div>
 
+                    {/* スコア表示 */}
                     <div style={{
-                        backgroundColor: '#222',
+                        backgroundColor: 'rgba(0,0,0,0.6)',
                         padding: '20px',
-                        borderRadius: '12px',
+                        borderRadius: '10px',
+                        border: '1px solid #444',
+                        marginBottom: '30px',
                         width: '100%',
-                        maxWidth: '300px',
-                        margin: '0 auto',
-                        border: '1px solid #444'
+                        maxWidth: '400px'
                     }}>
-                        <h3 style={{ color: '#888', marginBottom: '16px' }}>現在のスコア</h3>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}>
-                            <span style={{ color: '#fff' }}>あなた</span>
-                            <span style={{ color: '#ff2a3a', fontWeight: 'bold' }}>{myPlayerInfo.score} pt</span>
+                            <span style={{ color: '#aaa' }}>あなた ({myPlayerInfo.nickname})</span>
+                            <span style={{ color: '#fff', fontWeight: 'bold' }}>{myPlayerInfo.score} pt</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', marginTop: '8px' }}>
-                            <span style={{ color: '#aaa' }}>{otherPlayerInfo.nickname}</span>
-                            <span style={{ color: '#aaa' }}>{otherPlayerInfo.score} pt</span>
+                            <span style={{ color: '#666' }}>相手 ({otherPlayerInfo?.nickname})</span>
+                            <span style={{ color: '#888' }}>{otherPlayerInfo?.score} pt</span>
                         </div>
                     </div>
 
@@ -235,69 +253,56 @@ function Result({ appState }: Props) {
                             <h2 style={{ fontSize: '2.5rem', color: '#ffd700' }}>{finalResultText}</h2>
                         </div>
                     )}
+                    
+                    {/* Twitterシェアボタン */}
+                    <div style={{ marginBottom: '30px' }}>
+                        <a 
+                            href={twitterShareUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{
+                                display: 'inline-block',
+                                backgroundColor: '#1DA1F2',
+                                color: '#fff',
+                                textDecoration: 'none',
+                                padding: '10px 20px',
+                                borderRadius: '30px',
+                                fontWeight: 'bold',
+                                fontSize: '1rem',
+                                boxShadow: '0 4px 10px rgba(29, 161, 242, 0.4)',
+                                transition: 'transform 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                            <span style={{ marginRight: '8px' }}>𝕏</span>
+                            X (Twitter) で結果をポストする
+                        </a>
+                    </div>
 
-                    <div style={{
-                        marginTop: '50px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
+                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
                         <button
-                            className="btn"
-                            onClick={handleNext}
+                            className={`btn ${isWaitingNext || (!isFinished && timeLeft > 0) ? 'disabled' : ''}`}
+                            onClick={isFinished ? handleBackToTitle : handleNextRound}
+                            disabled={isWaitingNext || (!isFinished && timeLeft > 0)}
                             style={{
                                 width: '250px',
                                 opacity: (!isFinished && timeLeft > 0) ? 0.5 : 1,
                                 cursor: (!isFinished && timeLeft > 0) ? 'not-allowed' : 'pointer'
                             }}
-                            disabled={(!isFinished && timeLeft > 0) || isWaitingNext}
                         >
                             {isFinished ? 'タイトルへ戻る' : (
                                 isWaitingNext ? '相手を待っています...' :
                                     (timeLeft > 0 ? `次へ進むまで... ${timeLeft}秒` : '次のラウンドへ')
                             )}
                         </button>
-
-                        {isFinished && (
-                            <button
-                                className="btn"
-                                onClick={handleShare}
-                                style={{
-                                    width: '250px',
-                                    backgroundColor: '#1DA1F2',
-                                    borderColor: '#1DA1F2',
-                                    color: '#fff'
-                                }}
-                            >
-                                <span style={{ marginRight: '8px' }}>𝕏</span> 結果をポストする
-                            </button>
-                        )}
                     </div>
+
                 </div>
             )}
-
-            <style>
-                {`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-          }
-          @keyframes shake {
-            10%, 90% { transform: translate3d(-5px, 0, 0); }
-            20%, 80% { transform: translate3d(5px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-10px, -10px, 0); }
-            40%, 60% { transform: translate3d(10px, 10px, 0); }
-          }
-          @keyframes flashBg {
-            0% { background-color: #000; }
-            50% { background-color: #300; }
-            100% { background-color: #000; }
-          }
-        `}
-            </style>
         </div>
     );
 }
 
 export default Result;
+
