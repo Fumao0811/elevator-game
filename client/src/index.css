@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Inter:wght@400;700;900&display=swap');
+
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -15,6 +17,15 @@ body {
   align-items: center;
   overflow: hidden;
   /* For web app feel */
+}
+
+.horror-font-title {
+  font-family: 'Nosifer', cursive;
+}
+
+.horror-font {
+  font-family: 'Creepster', cursive;
+  letter-spacing: 2px;
 }
 
 /* App Container (Mobile Viewport) */
@@ -104,38 +115,94 @@ h3 {
 
 /* Elevator Styles */
 .elevator-board {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
   width: 100%;
-  margin-top: 24px;
+  margin-top: 30px;
+  max-width: 250px;
+  background: linear-gradient(135deg, #333, #111);
+  padding: 25px 15px;
+  border-radius: 10px;
+  border: 4px solid #444;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 10px 20px rgba(0, 0, 0, 0.5);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .floor-btn {
-  background-color: #333;
+  background: radial-gradient(circle at 30% 30%, #555, #222);
   color: #ccc;
-  border: 2px solid #555;
-  padding: 16px;
-  font-size: 1.5rem;
+  border: none;
+  width: 60px;
+  height: 60px;
+  font-size: 1.4rem;
   font-weight: bold;
-  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0px 5px 10px rgba(0, 0, 0, 0.6),
+    /* ドロップシャドウ */
+    inset 0px 3px 5px rgba(255, 255, 255, 0.2),
+    /* 上部の光沢 */
+    inset 0px -3px 5px rgba(0, 0, 0, 0.8),
+    /* 下部の陰影 */
+    0 0 0 3px #1a1a1a;
+  /* メリハリのための外枠 */
+  box-sizing: border-box;
+}
+
+.floor-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
 }
 
 .floor-btn:hover {
-  background-color: #444;
-  border-color: #888;
-  color: white;
+  background: radial-gradient(circle at 30% 30%, #666, #333);
+  color: #fff;
+  transform: translateY(1px);
+  box-shadow:
+    0px 4px 8px rgba(0, 0, 0, 0.6),
+    inset 0px 3px 5px rgba(255, 255, 255, 0.25),
+    inset 0px -3px 5px rgba(0, 0, 0, 0.8),
+    0 0 0 3px #1a1a1a;
 }
 
 .floor-btn.selected {
-  background-color: #d11a2a;
-  border-color: #ff4a5a;
-  color: white;
-  box-shadow: 0 0 15px rgba(209, 26, 42, 0.6), inset 0 0 10px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle at 30% 30%, #2a0000, #110000);
+  color: #ff4a5a;
+  box-shadow:
+    0px 1px 3px rgba(0, 0, 0, 0.8),
+    /* 押し込まれたような浅いシャドウ */
+    inset 0px 5px 8px rgba(0, 0, 0, 0.9),
+    /* 深い内向きシャドウ */
+    0 0 0 3px #1a1a1a,
+    0 0 15px rgba(255, 30, 30, 0.6);
+  /* LEDの光漏れ */
+  transform: translateY(3px);
+  text-shadow: 0 0 8px #ff4a5a;
+  /* 文字自体が光る */
+}
+
+.floor-btn.selected::after {
+  /* 押された時の内側のLEDリング */
+  border: 2px solid #ff4a5a;
+  box-shadow: inset 0 0 5px #ff4a5a, 0 0 5px #ff4a5a;
 }
 
 /* Status Text */
@@ -211,6 +278,34 @@ h3 {
   animation: flicker 4s infinite alternate;
 }
 
+/* クリックエフェクト用 (花) */
+.click-flower {
+  position: fixed;
+  pointer-events: none;
+  /* 下の要素のクリックを阻害しない */
+  z-index: 99999;
+  font-size: 2rem;
+  transform: translate(-50%, -50%);
+  animation: flowerFadeOut 0.8s ease-out forwards;
+}
+
+@keyframes flowerFadeOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2) rotate(45deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5) rotate(90deg);
+  }
+}
+
 /* Background Animations for Game UI */
 @keyframes slowZoom {
   0% {
@@ -239,8 +334,8 @@ h3 {
   animation: slowZoom 15s ease-in-out infinite;
 }
 
-/* Creeper animation (hand-drawn image zooming in) */
-@keyframes creepForward {
+/* 逃げる側：外から絵が迫ってくる（ジャンプスケア） */
+@keyframes creepForwardInside {
   0% {
     transform: scale(0.1) translateY(50px);
     opacity: 0;
@@ -249,6 +344,7 @@ h3 {
   20% {
     transform: scale(0.4) translateY(30px);
     opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8));
   }
 
   85% {
@@ -269,8 +365,37 @@ h3 {
   }
 }
 
-.creep-forward {
-  animation: creepForward 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards;
+.creep-forward-inside {
+  animation: creepForwardInside 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards;
+}
+
+/* 待ち伏せ側：自分が扉の奥へ突進して襲いかかる（ズームイン） */
+@keyframes dashInside {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  60% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+
+  90% {
+    transform: scale(3.5) translateY(10%);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px red);
+  }
+
+  100% {
+    transform: scale(5) translateY(15%);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+
+.dash-inside {
+  animation: dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards;
 }
 
 /* Elevator Doors Animation */
@@ -318,37 +443,29 @@ h3 {
   transform: translateX(100%);
 }
 
-/* First person approach animation */
+/* First person approach animation (扉が開く前までの歩行) */
 @keyframes walkTowards {
   0% {
     transform: scale(1) translateY(0);
   }
 
-  16% {
-    transform: scale(1.05) translateY(-8px);
-  }
-
-  33% {
-    transform: scale(1.1) translateY(0);
+  25% {
+    transform: scale(1.05) translateY(-5px);
   }
 
   50% {
-    transform: scale(1.15) translateY(-8px);
+    transform: scale(1.1) translateY(0);
   }
 
-  66% {
-    transform: scale(1.2) translateY(0);
-  }
-
-  83% {
-    transform: scale(1.25) translateY(-8px);
+  75% {
+    transform: scale(1.15) translateY(-5px);
   }
 
   100% {
-    transform: scale(1.3) translateY(0);
+    transform: scale(1.2) translateY(0);
   }
 }
 
 .walk-towards {
-  animation: walkTowards 6.5s linear forwards;
+  animation: walkTowards 3.5s linear forwards;
 }

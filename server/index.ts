@@ -42,18 +42,34 @@ interface Player {
     role: Role | null;
     score: number;
     isReady: boolean;
-    selectedFloor: number | null; // 選択した階層
+    selectedFloor: number | null; // 今回選択した階層
+    lastEscapedFloor: number | null; // 直前に「逃げる側」で選んだ階層
+    lastWaitedFloor: number | null; // 直前に「待ち伏せ側」で選んだ階層
     drawnImage: string | null; // 手書きのおばけ画像(Base64)
+}
+
+interface RoundHistory {
+    round: number;
+    turn: 1 | 2;
+    escapeNickname: string;
+    waitNickname: string;
+    escapedFloor: number | null;
+    waitedFloor: number | null;
+    isCaught: boolean;
 }
 
 interface Room {
     roomId: string;
     players: Player[];
     status: 'WAITING' | 'DRAWING' | 'PLAYING' | 'REVEAL' | 'FINISHED';
-    round: number;
+    round: number; // イニング数 (1〜maxRounds)
+    turn: 1 | 2;   // 1=表、2=裏
     maxRounds: number;
     winner: string | null;
     lastRoundCaught: boolean | null; // 直前のラウンドで捕まったか
+    lastEscapedFloor: number | null; // 直前のラウンドで逃走した階 (演出用)
+    lastWaitedFloor: number | null;  // 直前のラウンドで待ち伏せした階 (演出用)
+    history: RoundHistory[];         // これまでのターンの履歴
 }
 
 const PORT = process.env.PORT || 3001;
@@ -76,6 +92,8 @@ io.on('connection', (socket: Socket) => {
             score: 0,
             isReady: false,
             selectedFloor: null,
+            lastEscapedFloor: null,
+            lastWaitedFloor: null,
             drawnImage: null,
         };
 
@@ -88,14 +106,23 @@ io.on('connection', (socket: Socket) => {
             player.role = isEscapeFirst ? 'ESCAPE' : 'WAIT';
             waitingPlayer.role = isEscapeFirst ? 'WAIT' : 'ESCAPE';
 
+            player.lastEscapedFloor = null;
+            player.lastWaitedFloor = null;
+            waitingPlayer.lastEscapedFloor = null;
+            waitingPlayer.lastWaitedFloor = null;
+
             const newRoom: Room = {
                 roomId,
                 players: [waitingPlayer, player],
                 status: 'DRAWING', // マッチング直後は絵を描くフェーズから開始
                 round: 1,
-                maxRounds: 5, // 今回のルールでは5ラウンド
+                turn: 1, // 1を表、2を裏とみなす
+                maxRounds: 5, // 今回のルールでは5ラウンド=5イニング
                 winner: null,
                 lastRoundCaught: null, // 初期値
+                lastEscapedFloor: null,
+                lastWaitedFloor: null,
+                history: [],
             };
 
             rooms.set(roomId, newRoom);
@@ -203,13 +230,32 @@ io.on('connection', (socket: Socket) => {
         if (escaper.selectedFloor === waiter.selectedFloor) {
             // 捕獲された場合、逃ける側の得点はなし
             room.lastRoundCaught = true;
+            room.lastEscapedFloor = escaper.selectedFloor;
+            room.lastWaitedFloor = waiter.selectedFloor;
         } else {
             // 逃走成功
             room.lastRoundCaught = false;
+            room.lastEscapedFloor = escaper.selectedFloor;
+            room.lastWaitedFloor = waiter.selectedFloor;
             if (escaper.selectedFloor !== null) {
                 escaper.score += escaper.selectedFloor;
             }
         }
+
+        // 履歴に保存
+        room.history.push({
+            round: room.round,
+            turn: room.turn,
+            escapeNickname: escaper.nickname,
+            waitNickname: waiter.nickname,
+            escapedFloor: escaper.selectedFloor,
+            waitedFloor: waiter.selectedFloor,
+            isCaught: escaper.selectedFloor === waiter.selectedFloor
+        });
+
+        // 制限用に今回選んだ階層を記録
+        if (escaper.selectedFloor !== null) escaper.lastEscapedFloor = escaper.selectedFloor;
+        if (waiter.selectedFloor !== null) waiter.lastWaitedFloor = waiter.selectedFloor;
 
         // 役割交代とステートの初期化
         escaper.role = 'WAIT';
@@ -219,7 +265,13 @@ io.on('connection', (socket: Socket) => {
         p1.selectedFloor = null;
         p2.selectedFloor = null;
 
-        room.round += 1;
+        // ラウンド(イニング)とターン(表裏)の進行
+        if (room.turn === 1) {
+            room.turn = 2; // 裏へ
+        } else {
+            room.round += 1; // 次のイニングへ
+            room.turn = 1;   // 表に戻る
+        }
 
         // 全ラウンド終了または特定ポイント達成時
         if (room.round > room.maxRounds || p1.score >= 30 || p2.score >= 30) {
@@ -231,6 +283,34 @@ io.on('connection', (socket: Socket) => {
             room.status = 'PLAYING';
         }
     };
+
+    // 次のラウンドへの準備完了アクション（同期進行用）
+    socket.on('ready_next_round', ({ roomId }: { roomId: string }) => {
+        const room = rooms.get(roomId);
+        if (!room) return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player) return;
+
+        player.isReady = true;
+
+        const otherPlayer = room.players.find(p => p.id !== socket.id);
+
+        // 両者が完了した場合
+        if (otherPlayer && otherPlayer.isReady) {
+            player.isReady = false;
+            otherPlayer.isReady = false;
+
+            // 既にFINISHEDなら何もしない、それ以外はPLAYINGに戻ってフロントに通知
+            if (room.status !== 'FINISHED') {
+                room.status = 'PLAYING';
+                io.to(roomId).emit('start_next_round', room);
+            }
+        } else {
+            // 相手を待っている状態
+            socket.emit('waiting_for_opponent_next_round');
+        }
+    });
 
 
     // 切断時の処理

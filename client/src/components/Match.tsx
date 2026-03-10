@@ -6,28 +6,36 @@ interface Props {
     appState: AppState;
 }
 
-function Match({ appState }: Props) {
+const Match: React.FC<Props> = ({ appState }) => {
     const navigate = useNavigate();
     const [statusText, setStatusText] = useState('サーバーに接続中...');
+    const { socket, nickname } = appState;
 
     useEffect(() => {
-        if (!appState.socket || !appState.nickname) {
+        if (!socket || !nickname) {
             navigate('/');
             return;
         }
 
         // サーバーにマッチングリクエストを送信
-        appState.socket.emit('join_random_match', appState.nickname);
+        socket.emit('join_random_match', nickname);
 
         // 待機中イベントのハンドリング
-        appState.socket.on('waiting_for_match', () => {
+        socket.on('waiting_for_match', () => {
             setStatusText('対戦相手を探しています...');
         });
 
-        return () => {
-            appState.socket?.off('waiting_for_match');
+        // マッチング成功イベントのハンドリング
+        const handleMatchFound = () => {
+            navigate('/battle');
         };
-    }, [appState.socket, appState.nickname, navigate]);
+        socket.on('match_found', handleMatchFound);
+
+        return () => {
+            socket.off('waiting_for_match');
+            socket.off('match_found', handleMatchFound);
+        };
+    }, [socket, nickname, navigate]);
 
     return (
         <div className="screen-container">

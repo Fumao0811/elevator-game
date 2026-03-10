@@ -17,14 +17,17 @@ export interface AppState {
   socket: Socket | null;
   nickname: string;
   room: any | null; // サーバーから来るRoom情報
+  globalVolume: number; // 0.0 ~ 1.0 (BGM/SEのマスター音量)
   setNickname: (name: string) => void;
   setRoom: (room: any) => void;
+  setGlobalVolume: (vol: number) => void;
 }
 
 function MainApp() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [nickname, setNickname] = useState<string>('');
   const [room, setRoom] = useState<any | null>(null);
+  const [globalVolume, setGlobalVolume] = useState<number>(0.5); // 初期音量を50%にする
 
   const navigate = useNavigate();
 
@@ -46,6 +49,41 @@ function MainApp() {
       newSocket.disconnect();
     };
   }, []);
+
+  // 画面クリック時の花エフェクト・タップ音追加
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      // 花の要素を作成
+      const flower = document.createElement('div');
+      flower.className = 'click-flower';
+      flower.innerText = '🌸'; // 使う絵文字
+
+      // クリックした位置に配置
+      flower.style.left = `${e.clientX}px`;
+      flower.style.top = `${e.clientY}px`;
+
+      // bodyに追加
+      document.body.appendChild(flower);
+
+      // タップ音を鳴らす
+      const tapAudio = new Audio('/se_tap.mp3');
+      tapAudio.volume = Math.max(0, Math.min(1, 0.5 * globalVolume)); // 0.5はベースの音量
+      tapAudio.play().catch(err => console.log('Tap Audio prevented:', err));
+
+      // アニメーションが終わる頃(0.8秒後)に要素を削除
+      setTimeout(() => {
+        if (flower.parentNode) {
+          flower.parentNode.removeChild(flower);
+        }
+      }, 800);
+    };
+
+    window.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      window.removeEventListener('click', handleGlobalClick);
+    };
+  }, [globalVolume]); // globalVolumeが変わった時だけ再登録
 
   // Socketイベントのグローバルリッスン
   useEffect(() => {
@@ -69,25 +107,55 @@ function MainApp() {
     };
   }, [socket, navigate]);
 
-  const stateContext: AppState = {
+  const appState: AppState = {
     socket,
     nickname,
     room,
-    setNickname: (name: string) => {
+    globalVolume,
+    setNickname: (name: string) => { // Preserve localStorage logic
       setNickname(name);
       localStorage.setItem('elevator_nickname', name);
     },
     setRoom,
+    setGlobalVolume
   };
 
   return (
     <div className="app-wrapper">
+      {/* 全画面共通の音量調節UI */}
+      <div style={{
+        position: 'absolute',
+        top: '10px',
+        right: '15px',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: '5px 10px',
+        borderRadius: '20px',
+        border: '1px solid #444'
+      }}>
+        <span style={{ color: '#fff', fontSize: '1.2rem' }}>
+          {globalVolume === 0 ? '🔇' : (globalVolume < 0.5 ? '🔉' : '🔊')}
+        </span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={globalVolume}
+          onChange={(e) => setGlobalVolume(parseFloat(e.target.value))}
+          style={{ width: '80px', cursor: 'pointer' }}
+        />
+      </div>
+
       <Routes>
-        <Route path="/" element={<Home appState={stateContext} />} />
-        <Route path="/match" element={<Match appState={stateContext} />} />
-        <Route path="/paint" element={<Paint appState={stateContext} />} />
-        <Route path="/game" element={<Game appState={stateContext} />} />
-        <Route path="/result" element={<Result appState={stateContext} />} />
+        <Route path="/" element={<Home appState={appState} />} />
+        <Route path="/match" element={<Match appState={appState} />} />
+        <Route path="/paint" element={<Paint appState={appState} />} />
+        <Route path="/game" element={<Game appState={appState} />} />
+        <Route path="/result" element={<Result appState={appState} />} />
       </Routes>
     </div>
   );
