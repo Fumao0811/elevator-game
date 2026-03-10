@@ -2,9 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
 
-interface Props {
-    appState: AppState;
-}
+interface Props { appState: AppState; }
 
 function Result({ appState }: Props) {
     const navigate = useNavigate();
@@ -13,14 +11,9 @@ function Result({ appState }: Props) {
     const [showScare, setShowScare] = useState(false);
     const [scareDone, setScareDone] = useState(false);
     const [isWaitingNext, setIsWaitingNext] = useState(false);
-    
-    // スケア用音声の用意
     const scareAudioRef = useRef<HTMLAudioElement | null>(null);
-
-    // 次ラウンドへの準備周りのステート
     const [timeLeft, setTimeLeft] = useState(5);
 
-    // 自分の役割を取得
     const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
 
@@ -29,49 +22,27 @@ function Result({ appState }: Props) {
     const isFinished = room?.status === 'FINISHED';
 
     useEffect(() => {
-        if (!socket || !room) {
-            navigate('/');
-            return;
-        }
+        if (!socket || !room) { navigate('/'); return; }
 
-        // 逃げる側が捕まった、または待つ側が捕まえた場合、共通でジャンプスケア判定へ
         if (isCaught) {
             setShowScare(true);
-            
-            // 音声再生（ブラウザ制限で鳴らない場合もあるが意図的に仕込む）
             if (!scareAudioRef.current) {
                 scareAudioRef.current = new Audio('/scare_sound.mp3'); 
                 scareAudioRef.current.volume = 1.0;
             }
             scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
 
-            // ジャンプスケアの表示時間は長めに（1.5秒）
             setTimeout(() => {
                 setShowScare(false);
                 setScareDone(true);
             }, 1500);
-
         } else {
-            // 捕まっていない場合はスケア演出なし
             setScareDone(true);
         }
 
-        // 次ラウンド同期進行用ソケットイベント
-        socket.on('waiting_for_opponent_next_round', () => {
-            setIsWaitingNext(true);
-        });
-
-        socket.on('start_next_round', (updatedRoom) => {
-            appState.setRoom(updatedRoom);
-            navigate('/game');
-        });
-
-        // 最終スコア画面へ（全ラウンド終了時）
-        socket.on('game_finished', (updatedRoom: any) => {
-            appState.setRoom(updatedRoom);
-            alert('ゲーム終了！最終結果を確認します。');
-            navigate('/');
-        });
+        socket.on('waiting_for_opponent_next_round', () => { setIsWaitingNext(true); });
+        socket.on('start_next_round', (updatedRoom) => { appState.setRoom(updatedRoom); navigate('/game'); });
+        socket.on('game_finished', (updatedRoom: any) => { appState.setRoom(updatedRoom); alert('ゲーム終了！最終結果を確認します。'); navigate('/'); });
 
         return () => {
             socket.off('waiting_for_opponent_next_round');
@@ -80,17 +51,12 @@ function Result({ appState }: Props) {
         };
     }, [socket, room, isCaught, navigate, appState]);
 
-    // 結果表示後の5秒カウントダウン
     useEffect(() => {
         if (showScare || isFinished) return;
         if (timeLeft <= 0) return;
-
-        const timerId = setTimeout(() => {
-            setTimeLeft(prev => prev - 1);
-        }, 1000);
+        const timerId = setTimeout(() => { setTimeLeft(prev => prev - 1); }, 1000);
         return () => clearTimeout(timerId);
     }, [showScare, timeLeft, isFinished]);
-
 
     if (!room || !myPlayerInfo) return null;
 
@@ -101,15 +67,9 @@ function Result({ appState }: Props) {
         setIsWaitingNext(true);
     };
 
-    const handleBackToTitle = () => {
-        appState.setRoom(null);
-        navigate('/');
-    };
+    const handleBackToTitle = () => { appState.setRoom(null); navigate('/'); };
 
-    // 自分視点でのテキスト
-    // 前のラウンドでの自分の役割を判定 (直後にroleが入れ替わっているため逆転させる)
     const wasEscape = myPlayerInfo.role === 'WAIT';
-
     let resultText = "";
     let resultSubText = "";
     let answerText = "";
@@ -124,7 +84,6 @@ function Result({ appState }: Props) {
         }
         answerText = `あなた(逃走): ${room.lastEscapedFloor}F 🆚 ${otherPlayerInfo.nickname}(待伏): ${room.lastWaitedFloor}F`;
     } else {
-        // 自分が待ち伏せ側だった場合
         if (isCaught) {
             resultText = "捕獲成功！！";
             resultSubText = `${otherPlayerInfo.nickname} を捕まえました！`;
@@ -135,7 +94,6 @@ function Result({ appState }: Props) {
         answerText = `あなた(待伏): ${room.lastWaitedFloor}F 🆚 ${otherPlayerInfo.nickname}(逃走): ${room.lastEscapedFloor}F`;
     }
 
-    // 試合終了判定
     let finalResultText = '';
     if (isFinished) {
         if (room.winner === myPlayerInfo.id) finalResultText = '🏆 WINNER 🏆';
@@ -143,161 +101,43 @@ function Result({ appState }: Props) {
         else finalResultText = '💀 LOSER 💀';
     }
 
-    // Twitterシェア用のテキスト生成
     const generateShareText = () => {
         const title = "🚪 エレベーター心理戦ゲーム\n";
-        const result = isFinished 
-            ? `最終スコア: ${myPlayerInfo.score}pt (${finalResultText})\n`
-            : `【今回の結果】${resultText} ${resultSubText}\n`;
+        const result = isFinished ? `最終スコア: ${myPlayerInfo.score}pt (${finalResultText})\n` : `【今回の結果】${resultText} ${resultSubText}\n`;
         const url = window.location.origin; 
-        
         return encodeURIComponent(title + result + "\n#エレベーター心理戦 #ブラウザゲーム\n" + url);
     };
-
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${generateShareText()}`;
 
     return (
         <div className="screen-container">
             {showScare ? (
-                // --- ジャンプスケア演出（全画面） ---
-                (
-                    <div style={{
-                        backgroundColor: '#000',
-                        width: '100vw',
-                        height: '100vh',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        zIndex: 9999,
-                        animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite'
-                    }}>
-                        {otherPlayerInfo.drawnImage && (
-                            <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
-                                {/* 下層: AI生成の首なし体 */}
-                                <img
-                                    src="/body.png"
-                                    alt="scary body"
-                                    style={{ position: 'absolute', bottom: '-20%', width: '180%', height: '160%', objectFit: 'contain', zIndex: 9998, filter: 'drop-shadow(0 0 40px red)', opacity: 1, display: 'block' }}
-                                />
-                                {/* 上層: 手描きの顔（体の首元に合うように位置を調整） */}
-                                <img
-                                    src={otherPlayerInfo.drawnImage}
-                                    alt="Scare Face"
-                                    style={{
-                                        position: 'absolute',
-                                        top: '-15%', // 少し上にはみ出させる
-                                        width: '80%', // 顔のサイズを体に合わせる
-                                        zIndex: 9999,
-                                        mixBlendMode: 'normal', // 透過PNGが綺麗に乗るようにmultiplyからnormalに変更
-                                        filter: 'drop-shadow(0 0 30px red) contrast(150%)',
-                                        animation: 'fx-flicker 0.1s infinite'
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-                )
-            ) : (
-                <div className="result-content" style={{ animation: 'fadeIn 0.5s ease' }}>
-
-                    <div style={{ marginBottom: '40px' }}>
-                        <h1 style={{
-                            fontSize: '3rem',
-                            color: isCaught ? '#ff2a3a' : '#4aff4a',
-                            textShadow: '0 0 20px rgba(0,0,0,0.8)'
-                        }}>
-                            {resultText}
-                        </h1>
-                        <p style={{ marginTop: '10px', fontSize: '1.2rem', color: '#ccc' }}>
-                            {resultSubText}
-                        </p>
-                        <div style={{
-                            marginTop: '20px',
-                            padding: '10px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            borderRadius: '8px',
-                            display: 'inline-block',
-                            color: '#e0e0e0',
-                            border: '1px solid rgba(255,255,255,0.2)'
-                        }}>
-                            <span style={{ fontSize: '0.9rem', color: '#aaa', display: 'block', marginBottom: '4px' }}>【答え合わせ】</span>
-                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{answerText}</span>
-                        </div>
-                    </div>
-
-                    {/* スコア表示 */}
-                    <div style={{
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        padding: '20px',
-                        borderRadius: '10px',
-                        border: '1px solid #444',
-                        marginBottom: '30px',
-                        width: '100%',
-                        maxWidth: '400px'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}>
-                            <span style={{ color: '#aaa' }}>あなた ({myPlayerInfo.nickname})</span>
-                            <span style={{ color: '#fff', fontWeight: 'bold' }}>{myPlayerInfo.score} pt</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', marginTop: '8px' }}>
-                            <span style={{ color: '#666' }}>相手 ({otherPlayerInfo?.nickname})</span>
-                            <span style={{ color: '#888' }}>{otherPlayerInfo?.score} pt</span>
-                        </div>
-                    </div>
-
-                    {isFinished && (
-                        <div style={{ marginTop: '40px', animation: 'pulse 2s infinite' }}>
-                            <h2 style={{ fontSize: '2.5rem', color: '#ffd700' }}>{finalResultText}</h2>
+                <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite' }}>
+                    {otherPlayerInfo.drawnImage && (
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
+                            <img src="/body.png" alt="scary body" style={{ position: 'absolute', bottom: '-20%', width: '180%', height: '160%', objectFit: 'contain', zIndex: 9998, filter: 'drop-shadow(0 0 40px red)', opacity: 1, display: 'block' }} />
+                            <img src={otherPlayerInfo.drawnImage} alt="Scare Face" style={{ position: 'absolute', top: '-10%', width: '85%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 30px red) contrast(150%)', animation: 'fx-flicker 0.1s infinite' }} />
                         </div>
                     )}
-                    
-                    {/* Twitterシェアボタン */}
-                    <div style={{ marginBottom: '30px' }}>
-                        <a 
-                            href={twitterShareUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            style={{
-                                display: 'inline-block',
-                                backgroundColor: '#1DA1F2',
-                                color: '#fff',
-                                textDecoration: 'none',
-                                padding: '10px 20px',
-                                borderRadius: '30px',
-                                fontWeight: 'bold',
-                                fontSize: '1rem',
-                                boxShadow: '0 4px 10px rgba(29, 161, 242, 0.4)',
-                                transition: 'transform 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                            <span style={{ marginRight: '8px' }}>𝕏</span>
-                            X (Twitter) で結果をポストする
-                        </a>
+                </div>
+            ) : (
+                <div className="result-content" style={{ animation: 'fadeIn 0.5s ease' }}>
+                    <div style={{ marginBottom: '40px' }}>
+                        <h1 style={{ fontSize: '3rem', color: isCaught ? '#ff2a3a' : '#4aff4a', textShadow: '0 0 20px rgba(0,0,0,0.8)' }}>{resultText}</h1>
+                        <p style={{ marginTop: '10px', fontSize: '1.2rem', color: '#ccc' }}>{resultSubText}</p>
+                        <div style={{ marginTop: '20px', padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', display: 'inline-block', color: '#e0e0e0', border: '1px solid rgba(255,255,255,0.2)' }}><span style={{ fontSize: '0.9rem', color: '#aaa', display: 'block', marginBottom: '4px' }}>【答え合わせ】</span><span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{answerText}</span></div>
                     </div>
 
+                    <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '10px', border: '1px solid #444', marginBottom: '30px', width: '100%', maxWidth: '400px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}><span style={{ color: '#aaa' }}>あなた ({myPlayerInfo.nickname})</span><span style={{ color: '#fff', fontWeight: 'bold' }}>{myPlayerInfo.score} pt</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', marginTop: '8px' }}><span style={{ color: '#666' }}>相手 ({otherPlayerInfo?.nickname})</span><span style={{ color: '#888' }}>{otherPlayerInfo?.score} pt</span></div>
+                    </div>
+
+                    {isFinished && (<div style={{ marginTop: '40px', animation: 'pulse 2s infinite' }}><h2 style={{ fontSize: '2.5rem', color: '#ffd700' }}>{finalResultText}</h2></div>)}
+                    <div style={{ marginBottom: '30px' }}><a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', backgroundColor: '#1DA1F2', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1rem', boxShadow: '0 4px 10px rgba(29, 161, 242, 0.4)', transition: 'transform 0.2s' }}><span style={{ marginRight: '8px' }}>𝕏</span> X (Twitter) で結果をポストする</a></div>
                     <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
-                        <button
-                            className={`btn ${isWaitingNext || (!isFinished && timeLeft > 0) ? 'disabled' : ''}`}
-                            onClick={isFinished ? handleBackToTitle : handleNextRound}
-                            disabled={isWaitingNext || (!isFinished && timeLeft > 0)}
-                            style={{
-                                width: '250px',
-                                opacity: (!isFinished && timeLeft > 0) ? 0.5 : 1,
-                                cursor: (!isFinished && timeLeft > 0) ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            {isFinished ? 'タイトルへ戻る' : (
-                                isWaitingNext ? '相手を待っています...' :
-                                    (timeLeft > 0 ? `次へ進むまで... ${timeLeft}秒` : '次のラウンドへ')
-                            )}
-                        </button>
+                        <button className={`btn ${isWaitingNext || (!isFinished && timeLeft > 0) ? 'disabled' : ''}`} onClick={isFinished ? handleBackToTitle : handleNextRound} disabled={isWaitingNext || (!isFinished && timeLeft > 0)} style={{ width: '250px', opacity: (!isFinished && timeLeft > 0) ? 0.5 : 1, cursor: (!isFinished && timeLeft > 0) ? 'not-allowed' : 'pointer' }}>{isFinished ? 'タイトルへ戻る' : (isWaitingNext ? '相手を待っています...' : (timeLeft > 0 ? `次へ進むまで... ${timeLeft}秒` : '次のラウンドへ'))}</button>
                     </div>
-
                 </div>
             )}
         </div>
@@ -305,4 +145,3 @@ function Result({ appState }: Props) {
 }
 
 export default Result;
-
