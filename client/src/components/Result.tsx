@@ -22,6 +22,7 @@ function Result({ appState }: Props) {
     const myPlayerInfo = room.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room.players.find((p: any) => p.nickname !== nickname);
     const isCaught = room.lastRoundCaught;
+
     const resultText = isCaught ? "捕獲された…！" : "逃走成功！";
     const resultSubText = isCaught ? `${otherPlayerInfo.nickname} に見つかりました。` : `${myPlayerInfo.selectedFloor}階へ逃げ切りました。`;
     const isFinished = room.status === 'FINISHED';
@@ -49,7 +50,14 @@ function Result({ appState }: Props) {
             {!showResult ? (
                 isCaught && (
                     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite' }}>
-                        {otherPlayerInfo.drawnImage && (<img src={otherPlayerInfo.drawnImage} alt="Scare Face" style={{ width: '100%', maxWidth: '600px', objectFit: 'contain', filter: 'drop-shadow(0 0 30px red) contrast(200%)', transform: 'scale(1.2)' }} />)}
+                        {otherPlayerInfo.drawnImage && (
+                            <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                {/* 下層: AI生成の首なし体 */}
+                                <img src="/body.png" alt="scary body" style={{ position: 'absolute', bottom: '-20%', width: '180%', height: '160%', objectFit: 'contain', zIndex: 9998, filter: 'drop-shadow(0 0 40px red)', opacity: 1, display: 'block' }} />
+                                {/* 上層: 手描きの顔 */}
+                                <img src={otherPlayerInfo.drawnImage} alt="Scare Face" style={{ position: 'absolute', top: '10%', width: '100%', zIndex: 9999, mixBlendMode: 'multiply', filter: 'drop-shadow(0 0 30px red) contrast(200%)', animation: 'fx-flicker 0.1s infinite' }} />
+                            </div>
+                        )}
                     </div>
                 )
             ) : (
