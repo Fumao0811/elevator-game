@@ -6,13 +6,11 @@ function Result({ appState }: Props) {
     const navigate = useNavigate();
     const { socket, room, nickname } = appState;
     const [showScare, setShowScare] = useState(false);
-    const [scareDone, setScareDone] = useState(false);
     const [isWaitingNext, setIsWaitingNext] = useState(false);
     const scareAudioRef = useRef<HTMLAudioElement | null>(null);
     const [timeLeft, setTimeLeft] = useState(5);
     const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
-    const isEscape = myPlayerInfo?.role === 'ESCAPE';
     const isCaught = room?.lastRoundCaught;
     const isFinished = room?.status === 'FINISHED';
     useEffect(() => {
@@ -26,10 +24,7 @@ function Result({ appState }: Props) {
             scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
             setTimeout(() => {
                 setShowScare(false);
-                setScareDone(true);
             }, 1500);
-        } else {
-            setScareDone(true);
         }
         socket.on('waiting_for_opponent_next_round', () => { setIsWaitingNext(true); });
         socket.on('start_next_round', (updatedRoom) => { appState.setRoom(updatedRoom); navigate('/game'); });
