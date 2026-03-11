@@ -1,37 +1,29 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
-
 interface Props { appState: AppState; }
-
 function Result({ appState }: Props) {
     const navigate = useNavigate();
     const { socket, room, nickname } = appState;
-
     const [showScare, setShowScare] = useState(false);
     const [scareDone, setScareDone] = useState(false);
     const [isWaitingNext, setIsWaitingNext] = useState(false);
     const scareAudioRef = useRef<HTMLAudioElement | null>(null);
     const [timeLeft, setTimeLeft] = useState(5);
-
     const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
-
     const isEscape = myPlayerInfo?.role === 'ESCAPE';
     const isCaught = room?.lastRoundCaught;
     const isFinished = room?.status === 'FINISHED';
-
     useEffect(() => {
         if (!socket || !room) { navigate('/'); return; }
-
         if (isCaught) {
             setShowScare(true);
             if (!scareAudioRef.current) {
-                scareAudioRef.current = new Audio('/scare_sound.mp3'); 
+                scareAudioRef.current = new Audio('/scare_sound.mp3');
                 scareAudioRef.current.volume = 1.0;
             }
             scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
-
             setTimeout(() => {
                 setShowScare(false);
                 setScareDone(true);
@@ -39,41 +31,33 @@ function Result({ appState }: Props) {
         } else {
             setScareDone(true);
         }
-
         socket.on('waiting_for_opponent_next_round', () => { setIsWaitingNext(true); });
         socket.on('start_next_round', (updatedRoom) => { appState.setRoom(updatedRoom); navigate('/game'); });
         socket.on('game_finished', (updatedRoom: any) => { appState.setRoom(updatedRoom); alert('ゲーム終了！最終結果を確認します。'); navigate('/'); });
-
         return () => {
             socket.off('waiting_for_opponent_next_round');
             socket.off('start_next_round');
             socket.off('game_finished');
         };
     }, [socket, room, isCaught, navigate, appState]);
-
     useEffect(() => {
         if (showScare || isFinished) return;
         if (timeLeft <= 0) return;
         const timerId = setTimeout(() => { setTimeLeft(prev => prev - 1); }, 1000);
         return () => clearTimeout(timerId);
     }, [showScare, timeLeft, isFinished]);
-
     if (!room || !myPlayerInfo) return null;
-
     const handleNextRound = () => {
         if (!socket) return;
         if (timeLeft > 0 || isWaitingNext) return;
         socket.emit('ready_next_round', { roomId: room.roomId });
         setIsWaitingNext(true);
     };
-
     const handleBackToTitle = () => { appState.setRoom(null); navigate('/'); };
-
     const wasEscape = myPlayerInfo.role === 'WAIT';
     let resultText = "";
     let resultSubText = "";
     let answerText = "";
-
     if (wasEscape) {
         if (isCaught) {
             resultText = "捕獲された…！！";
@@ -93,22 +77,19 @@ function Result({ appState }: Props) {
         }
         answerText = `あなた(待伏): ${room.lastWaitedFloor}F 🆚 ${otherPlayerInfo.nickname}(逃走): ${room.lastEscapedFloor}F`;
     }
-
     let finalResultText = '';
     if (isFinished) {
         if (room.winner === myPlayerInfo.id) finalResultText = '🏆 WINNER 🏆';
         else if (room.winner === 'DRAW') finalResultText = '🤝 DRAW 🤝';
         else finalResultText = '💀 LOSER 💀';
     }
-
     const generateShareText = () => {
         const title = "🚪 エレベーター心理戦ゲーム\n";
         const result = isFinished ? `最終スコア: ${myPlayerInfo.score}pt (${finalResultText})\n` : `【今回の結果】${resultText} ${resultSubText}\n`;
-        const url = window.location.origin; 
+        const url = window.location.origin;
         return encodeURIComponent(title + result + "\n#エレベーター心理戦 #ブラウザゲーム\n" + url);
     };
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${generateShareText()}`;
-
     return (
         <div className="screen-container">
             {showScare ? (
@@ -127,12 +108,10 @@ function Result({ appState }: Props) {
                         <p style={{ marginTop: '10px', fontSize: '1.2rem', color: '#ccc' }}>{resultSubText}</p>
                         <div style={{ marginTop: '20px', padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', display: 'inline-block', color: '#e0e0e0', border: '1px solid rgba(255,255,255,0.2)' }}><span style={{ fontSize: '0.9rem', color: '#aaa', display: 'block', marginBottom: '4px' }}>【答え合わせ】</span><span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{answerText}</span></div>
                     </div>
-
                     <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', padding: '20px', borderRadius: '10px', border: '1px solid #444', marginBottom: '30px', width: '100%', maxWidth: '400px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}><span style={{ color: '#aaa' }}>あなた ({myPlayerInfo.nickname})</span><span style={{ color: '#fff', fontWeight: 'bold' }}>{myPlayerInfo.score} pt</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', marginTop: '8px' }}><span style={{ color: '#666' }}>相手 ({otherPlayerInfo?.nickname})</span><span style={{ color: '#888' }}>{otherPlayerInfo?.score} pt</span></div>
                     </div>
-
                     {isFinished && (<div style={{ marginTop: '40px', animation: 'pulse 2s infinite' }}><h2 style={{ fontSize: '2.5rem', color: '#ffd700' }}>{finalResultText}</h2></div>)}
                     <div style={{ marginBottom: '30px' }}><a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', backgroundColor: '#1DA1F2', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1rem', boxShadow: '0 4px 10px rgba(29, 161, 242, 0.4)', transition: 'transform 0.2s' }}><span style={{ marginRight: '8px' }}>𝕏</span> X (Twitter) で結果をポストする</a></div>
                     <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
@@ -143,5 +122,4 @@ function Result({ appState }: Props) {
         </div>
     );
 }
-
 export default Result;

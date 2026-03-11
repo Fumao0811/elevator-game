@@ -1,45 +1,38 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
-
 interface Props { appState: AppState; }
-
 const Paint: React.FC<Props> = ({ appState }) => {
     const { socket, room, setRoom } = appState;
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement>(null);
-
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasDrawn, setHasDrawn] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [currentColor, setCurrentColor] = useState('#000000');
     const [isEraser, setIsEraser] = useState(false);
     const [timeLeft, setTimeLeft] = useState(30);
-
     useEffect(() => {
         if (!socket || !room) { navigate('/'); return; }
         const handleDrawingFinished = (updatedRoom: any) => { setRoom(updatedRoom); navigate('/game'); };
         socket.on('drawing_finished', handleDrawingFinished);
         return () => { socket.off('drawing_finished', handleDrawingFinished); };
     }, [socket, room, navigate, setRoom]);
-
     useEffect(() => {
         if (isSubmitted) return;
         if (timeLeft <= 0) { submitDrawing(); return; }
         const timerId = setTimeout(() => { setTimeLeft(prev => prev - 1); }, 1000);
         return () => clearTimeout(timerId);
     }, [timeLeft, isSubmitted]);
-
     const getCoordinates = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
         let clientX, clientY;
-        if ('touches' in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } 
+        if ('touches' in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
         else { clientX = (e as React.MouseEvent).clientX; clientY = (e as React.MouseEvent).clientY; }
         const rect = canvas.getBoundingClientRect();
         return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
     };
-
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
         if (isSubmitted) return;
         setIsDrawing(true);
@@ -47,12 +40,11 @@ const Paint: React.FC<Props> = ({ appState }) => {
         const { x, y } = getCoordinates(e);
         const ctx = canvasRef.current?.getContext('2d', { willReadFrequently: true });
         if (ctx) {
-            if (isEraser) { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; } 
+            if (isEraser) { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; }
             else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = currentColor; ctx.lineWidth = 8; }
             ctx.beginPath(); ctx.moveTo(x, y);
         }
     };
-
     const draw = (e: React.MouseEvent | React.TouchEvent) => {
         if (!isDrawing || isSubmitted) return;
         e.preventDefault();
@@ -60,24 +52,20 @@ const Paint: React.FC<Props> = ({ appState }) => {
         const ctx = canvasRef.current?.getContext('2d');
         if (ctx) { ctx.lineTo(x, y); ctx.stroke(); }
     };
-
     const endDrawing = () => { setIsDrawing(false); canvasRef.current?.getContext('2d')?.closePath(); };
-
     const clearCanvas = () => {
         if (isSubmitted) return;
         const canvas = canvasRef.current;
         if (canvas) { canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height); setHasDrawn(false); }
     };
-
     const submitDrawing = () => {
         if (isSubmitted || !socket || !room) return;
         setIsSubmitted(true);
-        
+
         // ★ここでユーザーがボタンを押した瞬間に音をダミー再生させ、「音声ブロック」を解除させる必殺技
         const dummyAudio = new Audio('/scare_sound.mp3');
         dummyAudio.volume = 0; // 音は出さない
         dummyAudio.play().then(() => { dummyAudio.pause(); dummyAudio.currentTime = 0; }).catch(e => console.log('Audio Blocked:', e));
-
         const canvas = canvasRef.current;
         if (canvas) {
             const tempCanvas = document.createElement('canvas'); tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -88,14 +76,13 @@ const Paint: React.FC<Props> = ({ appState }) => {
                 const imageData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
                 const data = imageData.data;
                 for (let i = 0; i < data.length; i += 4) {
-                    if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i+3] = 0;
+                    if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) data[i + 3] = 0;
                 }
                 tCtx.putImageData(imageData, 0, 0);
             }
             socket.emit('submit_drawing', { roomId: room.roomId, imageBase64: tempCanvas.toDataURL('image/png') });
         }
     };
-
     useEffect(() => {
         const canvas = canvasRef.current;
         if (canvas) {
@@ -104,7 +91,6 @@ const Paint: React.FC<Props> = ({ appState }) => {
             if (ctx) { ctx.lineCap = 'round'; ctx.lineJoin = 'round'; }
         }
     }, [currentColor]);
-
     return (
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h2 style={{ color: '#fff' }}>おばけを描け！</h2>

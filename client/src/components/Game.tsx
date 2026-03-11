@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
-
 interface Props { appState: AppState; }
-
 function Game({ appState }: Props) {
     const navigate = useNavigate();
     const { socket, room, nickname } = appState;
-
     const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
     const [isWaiting, setIsWaiting] = useState(false);
     const [showCountdown, setShowCountdown] = useState(false);
@@ -16,15 +13,13 @@ function Game({ appState }: Props) {
     const [pendingResultRoom, setPendingResultRoom] = useState<any>(null);
     const [showRoundSplash, setShowRoundSplash] = useState(true);
     const [selectTimeLeft, setSelectTimeLeft] = useState(30);
-
     useEffect(() => {
         if (room?.round) {
             setShowRoundSplash(true);
-            const timer = setTimeout(() => { setShowRoundSplash(false); }, 2000); 
+            const timer = setTimeout(() => { setShowRoundSplash(false); }, 2000);
             return () => clearTimeout(timer);
         }
     }, [room?.round]);
-
     useEffect(() => {
         if (!socket || !room) { navigate('/'); return; }
         socket.on('both_ready_countdown', () => {
@@ -36,28 +31,23 @@ function Game({ appState }: Props) {
         socket.on('waiting_for_opponent', () => { setIsWaiting(true); });
         return () => { socket.off('both_ready_countdown'); socket.off('round_result'); socket.off('waiting_for_opponent'); };
     }, [socket, room, navigate, appState]);
-
     if (!room) return null;
-
     const myPlayerInfo = room.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room.players.find((p: any) => p.nickname !== nickname);
     const isEscape = myPlayerInfo?.role === 'ESCAPE';
     const forbiddenFloor = isEscape ? myPlayerInfo?.lastEscapedFloor : otherPlayerInfo?.lastEscapedFloor;
-    const floors = [1, 2, 3, 4, 5]; 
-
+    const floors = [1, 2, 3, 4, 5];
     const handleFloorSelect = (floor: number) => {
         if (isWaiting || showCountdown || floor === forbiddenFloor) return;
-        
+
         // ★ここでも念のためボタンクリック時にサウンド再生権限をブロック解除させておく
         const dummyAudio = new Audio('/scare_sound.mp3');
         dummyAudio.volume = 0;
         dummyAudio.play().then(() => { dummyAudio.pause(); dummyAudio.currentTime = 0; }).catch(e => console.log('Audio Blocked:', e));
-
         setSelectedFloor(floor);
         socket?.emit('select_floor', { roomId: room.roomId, floor });
         setIsWaiting(true);
     };
-
     useEffect(() => {
         if (isWaiting || showCountdown || pendingResultRoom) return;
         if (selectTimeLeft <= 0) {
@@ -68,17 +58,14 @@ function Game({ appState }: Props) {
         const timerId = setTimeout(() => { setSelectTimeLeft(prev => prev - 1); }, 1000);
         return () => clearTimeout(timerId);
     }, [selectTimeLeft, isWaiting, showCountdown, pendingResultRoom, forbiddenFloor]);
-
     useEffect(() => {
         if (showCountdown && countdownNum === 0 && !doorsOpening && pendingResultRoom) {
             setDoorsOpening(true);
-            setTimeout(() => { appState.setRoom(pendingResultRoom); navigate('/result'); }, 3500); 
+            setTimeout(() => { appState.setRoom(pendingResultRoom); navigate('/result'); }, 3500);
         }
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
-
     if (showCountdown) {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
-
         return (
             <div className="screen-container" style={{ padding: 0, position: 'relative' }}>
                 <div className={`door-container ${doorsOpening ? 'doors-opening' : ''} ${!isEscape ? 'walk-towards' : ''}`}>
@@ -106,9 +93,7 @@ function Game({ appState }: Props) {
             </div>
         );
     }
-
     const bgImage = isEscape ? '/bg_inside.png' : '/bg_outside.png';
-
     return (
         <div className="screen-container game-bg-anim" style={{ justifyContent: 'flex-start', paddingTop: '40px', backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
             {showRoundSplash && (
@@ -152,5 +137,4 @@ function Game({ appState }: Props) {
         </div>
     );
 }
-
 export default Game;
