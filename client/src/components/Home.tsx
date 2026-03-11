@@ -57,7 +57,7 @@ function Home({ appState }: Props) {
                 <input
                     type="text"
                     className="input-field"
-                    placeholder="ニックネーム (3〜12文字)"
+                    placeholder="ニックネーム (1〜12文字)"
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     maxLength={12}

@@ -107,8 +107,12 @@ function Result({ appState }: Props) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}><span style={{ color: '#aaa' }}>あなた ({myPlayerInfo.nickname})</span><span style={{ color: '#fff', fontWeight: 'bold' }}>{myPlayerInfo.score} pt</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', marginTop: '8px' }}><span style={{ color: '#666' }}>相手 ({otherPlayerInfo?.nickname})</span><span style={{ color: '#888' }}>{otherPlayerInfo?.score} pt</span></div>
                     </div>
-                    {isFinished && (<div style={{ marginTop: '40px', animation: 'pulse 2s infinite' }}><h2 style={{ fontSize: '2.5rem', color: '#ffd700' }}>{finalResultText}</h2></div>)}
-                    <div style={{ marginBottom: '30px' }}><a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', backgroundColor: '#1DA1F2', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1rem', boxShadow: '0 4px 10px rgba(29, 161, 242, 0.4)', transition: 'transform 0.2s' }}><span style={{ marginRight: '8px' }}>𝕏</span> X (Twitter) で結果をポストする</a></div>
+                    {isFinished && (
+                        <>
+                            <div style={{ marginTop: '40px', animation: 'pulse 2s infinite' }}><h2 style={{ fontSize: '2.5rem', color: '#ffd700' }}>{finalResultText}</h2></div>
+                            <div style={{ marginBottom: '30px' }}><a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', backgroundColor: '#1DA1F2', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1rem', boxShadow: '0 4px 10px rgba(29, 161, 242, 0.4)', transition: 'transform 0.2s' }}><span style={{ marginRight: '8px' }}>𝕏</span> X (Twitter) で結果をポストする</a></div>
+                        </>
+                    )}
                     <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
                         <button className={`btn ${isWaitingNext || (!isFinished && timeLeft > 0) ? 'disabled' : ''}`} onClick={isFinished ? handleBackToTitle : handleNextRound} disabled={isWaitingNext || (!isFinished && timeLeft > 0)} style={{ width: '250px', opacity: (!isFinished && timeLeft > 0) ? 0.5 : 1, cursor: (!isFinished && timeLeft > 0) ? 'not-allowed' : 'pointer' }}>{isFinished ? 'タイトルへ戻る' : (isWaitingNext ? '相手を待っています...' : (timeLeft > 0 ? `次へ進むまで... ${timeLeft}秒` : '次のラウンドへ'))}</button>
                     </div>
