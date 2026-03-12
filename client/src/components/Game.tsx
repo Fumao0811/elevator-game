@@ -66,12 +66,59 @@ function Game({ appState }: Props) {
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
     if (showCountdown) {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
+
+        // 【背景透過ユーティリティ】
+        const processImage = (src: string): Promise<string> => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = src;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) { resolve(src); return; }
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i], g = data[i + 1], b = data[i + 2];
+                        // 白および非常に明るい色を透明にする (閾値は環境に合わせて調整可能)
+                        if (r > 240 && g > 240 && b > 240) {
+                            data[i + 3] = 0;
+                        }
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    resolve(canvas.toDataURL());
+                };
+                img.onerror = () => resolve(src);
+            });
+        };
+
+        const [processedBody, setProcessedBody] = useState<string | null>(null);
+        const [processedFace, setProcessedFace] = useState<string | null>(null);
+
+        useEffect(() => {
+            if (isCaughtResult && otherPlayerInfo?.drawnImage) {
+                const bodySrc = isEscape ? "/body_attack.png" : "/body_fear.png";
+                processImage(bodySrc).then(setProcessedBody);
+                processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
+                
+                // 初回読み込み時にのみサウンド再生
+                const audio = new Audio('/scare_sound.mp3');
+                audio.volume = 1.0;
+                audio.play().catch(e => console.log('Audio error:', e));
+            }
+        }, [isCaughtResult, otherPlayerInfo?.drawnImage, isEscape]);
+
         return (
             <div className="screen-container" style={{ padding: 0, position: 'relative' }}>
                 <div className={`door-container ${doorsOpening ? 'doors-opening' : ''} ${!isEscape ? 'walk-towards' : ''}`}>
+                    <h1 className="fx-flicker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '5rem', color: '#ff2a3a', zIndex: 1000, pointerEvents: 'none', textShadow: '0 0 10px #000, 0 0 20px #ff0000', opacity: doorsOpening ? 0 : 1, transition: 'opacity 0.2s' }}>{countdownNum > 0 ? countdownNum : 'OPEN!'}</h1>
                     {countdownNum <= 0 && pendingResultRoom && (
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_empty.png)`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none' }}>
-                            {isCaughtResult && otherPlayerInfo?.drawnImage && (
+                            {isCaughtResult && processedFace && processedBody && (
                                 <div style={{ 
                                     position: 'relative', 
                                     width: isEscape ? '350px' : '260px', 
@@ -85,23 +132,22 @@ function Game({ appState }: Props) {
                                     marginTop: isEscape ? '0' : '20px'
                                 }}>
                                     <img 
-                                        src={isEscape ? "/body_attack.png" : "/body_fear.png"} 
+                                        src={processedBody} 
                                         alt="scary body" 
-                                        style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)' }} 
+                                        style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, filter: 'brightness(1.1) contrast(1.1)' }} 
                                     />
                                     <img 
-                                        src={otherPlayerInfo.drawnImage} 
+                                        src={processedFace} 
                                         alt="scare face" 
                                         style={{ 
                                             position: 'absolute', 
-                                            top: isEscape ? '10%' : '25%', 
-                                            width: isEscape ? '40%' : '35%', 
+                                            top: isEscape ? '22%' : '32%', 
+                                            width: isEscape ? '35%' : '30%', 
                                             zIndex: 9999, 
                                             mixBlendMode: 'normal', 
                                             filter: 'drop-shadow(0 0 15px red) contrast(1.2)', 
                                             animation: 'fx-flicker 0.2s infinite' 
                                         }} 
-                                        onLoad={() => { const audio = new Audio('/scare_sound.mp3'); audio.volume = 1.0; audio.play().catch(e => console.log('Audio error:', e)); }} 
                                     />
                                 </div>
                             )}
@@ -109,8 +155,7 @@ function Game({ appState }: Props) {
                     )}
                     <div className="door-panel door-left"></div>
                     <div className="door-panel door-right"></div>
-                    <div style={{ position: 'absolute', top: '10%', left: '0', right: '0', textAlign: 'center', zIndex: 300, animation: 'fadeIn 0.5s ease forwards' }}><h2 style={{ display: 'inline-block', backgroundColor: 'rgba(0,0,0,0.85)', padding: '10px 30px', borderRadius: '50px', color: isEscape ? '#4aff4a' : '#ff4a5a', border: `2px solid ${isEscape ? '#4aff4a' : '#ff4a5a'}`, boxShadow: `0 0 20px ${isEscape ? 'rgba(74,255,74,0.5)' : 'rgba(255,74,90,0.5)'}`, fontSize: '1.5rem', fontWeight: 'bold' }}>あなたは 【{isEscape ? 'エレベーターの中' : 'エレベーターの外'}】</h2></div>
-                    <h1 className="fx-flicker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '5rem', color: '#ff2a3a', zIndex: 200, pointerEvents: 'none', textShadow: '0 0 10px #000, 0 0 20px #ff0000', opacity: doorsOpening ? 0 : 1, transition: 'opacity 0.2s' }}>{countdownNum > 0 ? countdownNum : 'OPEN!'}</h1>
+                    <div style={{ position: 'absolute', top: '10%', left: '0', right: '0', textAlign: 'center', zIndex: 1100, animation: 'fadeIn 0.5s ease forwards' }}><h2 style={{ display: 'inline-block', backgroundColor: 'rgba(0,0,0,0.85)', padding: '10px 30px', borderRadius: '50px', color: isEscape ? '#4aff4a' : '#ff4a5a', border: `2px solid ${isEscape ? '#4aff4a' : '#ff4a5a'}`, boxShadow: `0 0 20px ${isEscape ? 'rgba(74,255,74,0.5)' : 'rgba(255,74,90,0.5)'}`, fontSize: '1.5rem', fontWeight: 'bold' }}>あなたは 【{isEscape ? 'エレベーターの中' : 'エレベーターの外'}】</h2></div>
                 </div>
             </div>
         );

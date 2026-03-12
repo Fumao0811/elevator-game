@@ -85,11 +85,50 @@ function Result({ appState }: Props) {
         return encodeURIComponent(title + result + "\n#エレベーター心理戦 #ブラウザゲーム\n" + url);
     };
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${generateShareText()}`;
+    const [processedBody, setProcessedBody] = useState<string | null>(null);
+    const [processedFace, setProcessedFace] = useState<string | null>(null);
+
+    // 【背景透過ユーティリティ】
+    const processImage = (src: string): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = src;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { resolve(src); return; }
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i], g = data[i + 1], b = data[i + 2];
+                    if (r > 240 && g > 240 && b > 240) {
+                        data[i + 3] = 0;
+                    }
+                }
+                ctx.putImageData(imageData, 0, 0);
+                resolve(canvas.toDataURL());
+            };
+            img.onerror = () => resolve(src);
+        });
+    };
+
+    useEffect(() => {
+        if (showScare && otherPlayerInfo?.drawnImage) {
+            const bodySrc = wasEscape ? "/body_attack.png" : "/body_fear.png";
+            processImage(bodySrc).then(setProcessedBody);
+            processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
+        }
+    }, [showScare, otherPlayerInfo?.drawnImage, wasEscape]);
+
     return (
         <div className="screen-container">
             {showScare ? (
                 <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite' }}>
-                    {otherPlayerInfo.drawnImage && (
+                    {processedFace && processedBody && (
                         <div style={{ 
                             position: 'relative', 
                             width: '100%', 
@@ -103,17 +142,17 @@ function Result({ appState }: Props) {
                             marginTop: wasEscape ? '0' : '50px'
                         }}>
                             <img 
-                                src={wasEscape ? "/body_attack.png" : "/body_fear.png"} 
+                                src={processedBody} 
                                 alt="scary body" 
-                                style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)', display: 'block' }} 
+                                style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, display: 'block' }} 
                             />
                             <img 
-                                src={otherPlayerInfo.drawnImage} 
+                                src={processedFace} 
                                 alt="Scare Face" 
                                 style={{ 
                                     position: 'absolute', 
-                                    top: wasEscape ? '10%' : '25%', 
-                                    width: wasEscape ? '42%' : '35%', 
+                                    top: wasEscape ? '22%' : '35%', 
+                                    width: wasEscape ? '38%' : '32%', 
                                     zIndex: 9999, 
                                     mixBlendMode: 'normal', 
                                     filter: 'drop-shadow(0 0 30px red) contrast(150%)', 
