@@ -71,18 +71,14 @@ function Game({ appState }: Props) {
                 <div className={`door-container ${doorsOpening ? 'doors-opening' : ''} ${!isEscape ? 'walk-towards' : ''}`}>
                     {countdownNum <= 0 && pendingResultRoom && (
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_empty.png)`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none' }}>
-                            {isEscape && isCaughtResult && otherPlayerInfo?.drawnImage && (
-                                <div className="creep-forward-inside" style={{ position: 'relative', width: '300px', height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
-                                    <img src="/body.png" alt="scary body" style={{ position: 'absolute', bottom: '-40px', width: '200%', height: '200%', objectFit: 'contain', zIndex: 9998, filter: 'drop-shadow(0 0 10px red)', opacity: 1, display: 'block' }} />
-                                    <img src={otherPlayerInfo.drawnImage} alt="scare face" style={{ position: 'absolute', top: '-60px', width: '85%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 15px red) contrast(1.2)', animation: 'fx-flicker 0.2s infinite' }} onLoad={() => { const audio = new Audio('/scare_sound.mp3'); audio.volume = 1.0; audio.play().catch(e => console.log('Audio error:', e)); }} />
+                            {isCaughtResult && otherPlayerInfo?.drawnImage && (
+                                <div style={{ position: 'relative', width: isEscape ? '300px' : '200px', height: isEscape ? '400px' : '260px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible', animation: isEscape ? 'dashTowards 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'fx-flicker 0.5s infinite' }}>
+                                    <img src="/body.png" alt="scary body" style={{ position: 'absolute', top: '0', height: '180%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)' }} />
+                                    <img src={otherPlayerInfo.drawnImage} alt="scare face" style={{ position: 'absolute', top: '-10%', width: '45%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 15px red) contrast(1.2)', animation: 'fx-flicker 0.2s infinite' }} onLoad={() => { const audio = new Audio('/scare_sound.mp3'); audio.volume = 1.0; audio.play().catch(e => console.log('Audio error:', e)); }} />
                                 </div>
                             )}
-                            {!isEscape && isCaughtResult && otherPlayerInfo?.drawnImage && (
-                                <div style={{ position: 'relative', width: '200px', height: '260px', animation: 'fx-flicker 0.5s infinite', overflow: 'visible' }}>
-                                    <img src="/body.png" alt="scary body target" style={{ position: 'absolute', bottom: '-20px', width: '200%', height: '200%', objectFit: 'contain', zIndex: 9998, opacity: 1, display: 'block' }} />
-                                    <img src={otherPlayerInfo.drawnImage} alt="target face" style={{ position: 'absolute', top: '-40px', left: '10%', width: '85%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 10px rgba(255,0,0,0.5))' }} onLoad={() => { const audio = new Audio('/scare_sound.mp3'); audio.volume = 1.0; audio.play().catch(e => console.log('Audio error:', e)); }} />
-                                </div>
-                            )}
+                        </div>
+                    )}
                         </div>
                     )}
                     <div className="door-panel door-left"></div>

@@ -91,8 +91,8 @@ function Result({ appState }: Props) {
                 <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite' }}>
                     {otherPlayerInfo.drawnImage && (
                         <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
-                            <img src="/body.png" alt="scary body" style={{ position: 'absolute', bottom: '-20%', width: '180%', height: '160%', objectFit: 'contain', zIndex: 9998, filter: 'drop-shadow(0 0 40px red)', opacity: 1, display: 'block' }} />
-                            <img src={otherPlayerInfo.drawnImage} alt="Scare Face" style={{ position: 'absolute', top: '-10%', width: '85%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 30px red) contrast(150%)', animation: 'fx-flicker 0.1s infinite' }} />
+                            <img src="/body.png" alt="scary body" style={{ position: 'absolute', top: '0', height: '150%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)', display: 'block' }} />
+                            <img src={otherPlayerInfo.drawnImage} alt="Scare Face" style={{ position: 'absolute', top: '-8%', width: '50%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 30px red) contrast(150%)', animation: 'fx-flicker 0.1s infinite' }} />
                         </div>
                     )}
                 </div>
