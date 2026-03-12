@@ -90,9 +90,35 @@ function Result({ appState }: Props) {
             {showScare ? (
                 <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite' }}>
                     {otherPlayerInfo.drawnImage && (
-                        <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'visible' }}>
-                            <img src="/body.png" alt="scary body" style={{ position: 'absolute', top: '0', height: '150%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)', display: 'block' }} />
-                            <img src={otherPlayerInfo.drawnImage} alt="Scare Face" style={{ position: 'absolute', top: '-8%', width: '50%', zIndex: 9999, mixBlendMode: 'normal', filter: 'drop-shadow(0 0 30px red) contrast(150%)', animation: 'fx-flicker 0.1s infinite' }} />
+                        <div style={{ 
+                            position: 'relative', 
+                            width: '100%', 
+                            maxWidth: '700px', 
+                            height: '85vh', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            overflow: 'visible',
+                            transform: wasEscape ? 'scale(1.4)' : 'scale(1.1)' 
+                        }}>
+                            <img 
+                                src={wasEscape ? "/body_attack.png" : "/body.png"} 
+                                alt="scary body" 
+                                style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)', display: 'block' }} 
+                            />
+                            <img 
+                                src={otherPlayerInfo.drawnImage} 
+                                alt="Scare Face" 
+                                style={{ 
+                                    position: 'absolute', 
+                                    top: wasEscape ? '10%' : '8%', 
+                                    width: wasEscape ? '42%' : '40%', 
+                                    zIndex: 9999, 
+                                    mixBlendMode: 'normal', 
+                                    filter: 'drop-shadow(0 0 30px red) contrast(150%)', 
+                                    animation: 'fx-flicker 0.1s infinite' 
+                                }} 
+                            />
                         </div>
                     )}
                 </div>
