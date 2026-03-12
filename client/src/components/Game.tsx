@@ -74,17 +74,18 @@ function Game({ appState }: Props) {
                             {isCaughtResult && otherPlayerInfo?.drawnImage && (
                                 <div style={{ 
                                     position: 'relative', 
-                                    width: isEscape ? '350px' : '220px', 
-                                    height: isEscape ? '450px' : '280px', 
+                                    width: isEscape ? '350px' : '260px', 
+                                    height: isEscape ? '450px' : '320px', 
                                     display: 'flex', 
                                     flexDirection: 'column', 
                                     alignItems: 'center', 
                                     overflow: 'visible', 
                                     animation: isEscape ? 'dashTowards 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'fx-flicker 0.5s infinite',
-                                    transform: isEscape ? 'scale(1.3)' : 'scale(1)'
+                                    transform: isEscape ? 'scale(1.3)' : 'scale(1)',
+                                    marginTop: isEscape ? '0' : '20px'
                                 }}>
                                     <img 
-                                        src={isEscape ? "/body_attack.png" : "/body.png"} 
+                                        src={isEscape ? "/body_attack.png" : "/body_fear.png"} 
                                         alt="scary body" 
                                         style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)' }} 
                                     />
@@ -93,8 +94,8 @@ function Game({ appState }: Props) {
                                         alt="scare face" 
                                         style={{ 
                                             position: 'absolute', 
-                                            top: isEscape ? '10%' : '8%', 
-                                            width: isEscape ? '40%' : '38%', 
+                                            top: isEscape ? '10%' : '25%', 
+                                            width: isEscape ? '40%' : '35%', 
                                             zIndex: 9999, 
                                             mixBlendMode: 'normal', 
                                             filter: 'drop-shadow(0 0 15px red) contrast(1.2)', 

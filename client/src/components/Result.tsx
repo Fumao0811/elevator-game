@@ -99,10 +99,11 @@ function Result({ appState }: Props) {
                             flexDirection: 'column', 
                             alignItems: 'center', 
                             overflow: 'visible',
-                            transform: wasEscape ? 'scale(1.4)' : 'scale(1.1)' 
+                            transform: wasEscape ? 'scale(1.4)' : 'scale(1.1)',
+                            marginTop: wasEscape ? '0' : '50px'
                         }}>
                             <img 
-                                src={wasEscape ? "/body_attack.png" : "/body.png"} 
+                                src={wasEscape ? "/body_attack.png" : "/body_fear.png"} 
                                 alt="scary body" 
                                 style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, mixBlendMode: 'multiply', filter: 'brightness(1.1) contrast(1.1)', display: 'block' }} 
                             />
@@ -111,8 +112,8 @@ function Result({ appState }: Props) {
                                 alt="Scare Face" 
                                 style={{ 
                                     position: 'absolute', 
-                                    top: wasEscape ? '10%' : '8%', 
-                                    width: wasEscape ? '42%' : '40%', 
+                                    top: wasEscape ? '10%' : '25%', 
+                                    width: wasEscape ? '42%' : '35%', 
                                     zIndex: 9999, 
                                     mixBlendMode: 'normal', 
                                     filter: 'drop-shadow(0 0 30px red) contrast(150%)', 
