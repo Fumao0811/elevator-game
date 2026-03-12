@@ -79,8 +79,6 @@ function Game({ appState }: Props) {
                             )}
                         </div>
                     )}
-                        </div>
-                    )}
                     <div className="door-panel door-left"></div>
                     <div className="door-panel door-right"></div>
                     <div style={{ position: 'absolute', top: '10%', left: '0', right: '0', textAlign: 'center', zIndex: 300, animation: 'fadeIn 0.5s ease forwards' }}><h2 style={{ display: 'inline-block', backgroundColor: 'rgba(0,0,0,0.85)', padding: '10px 30px', borderRadius: '50px', color: isEscape ? '#4aff4a' : '#ff4a5a', border: `2px solid ${isEscape ? '#4aff4a' : '#ff4a5a'}`, boxShadow: `0 0 20px ${isEscape ? 'rgba(74,255,74,0.5)' : 'rgba(255,74,90,0.5)'}`, fontSize: '1.5rem', fontWeight: 'bold' }}>あなたは 【{isEscape ? 'エレベーターの中' : 'エレベーターの外'}】</h2></div>
