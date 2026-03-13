@@ -60,57 +60,74 @@ function Game({ appState }: Props) {
     }, [selectTimeLeft, isWaiting, showCountdown, pendingResultRoom, forbiddenFloor]);
     useEffect(() => {
         if (showCountdown && countdownNum === 0 && !doorsOpening && pendingResultRoom) {
+            console.log('Door Transition: Opening doors...');
             setDoorsOpening(true);
-            setTimeout(() => { appState.setRoom(pendingResultRoom); navigate('/result'); }, 3500);
+            // 3.8秒後に結果画面へ遷移（Game側のアニメーション終了を待ってからResultに切り替える）
+            const timer = setTimeout(() => { 
+                console.log('Door Transition: Navigating to result...');
+                appState.setRoom(pendingResultRoom); 
+                navigate('/result'); 
+            }, 3800);
+            return () => clearTimeout(timer);
         }
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
+    const [processedBody, setProcessedBody] = useState<string | null>(null);
+    const [processedFace, setProcessedFace] = useState<string | null>(null);
+
+    // 【背景透過ユーティリティ】
+    const processImage = (src: string): Promise<string> => {
+        return new Promise((resolve) => {
+            console.log(`Image Processing: Starting for ${src}`);
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = src;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { 
+                    console.error('Image Processing: Canvas context failed');
+                    resolve(src); 
+                    return; 
+                }
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i], g = data[i + 1], b = data[i + 2];
+                    if (r > 240 && g > 240 && b > 240) {
+                        data[i + 3] = 0;
+                    }
+                }
+                ctx.putImageData(imageData, 0, 0);
+                console.log(`Image Processing: Completed for ${src}`);
+                resolve(canvas.toDataURL());
+            };
+            img.onerror = (err) => {
+                console.error(`Image Processing: Failed for ${src}`, err);
+                resolve(src);
+            };
+        });
+    };
+
+    useEffect(() => {
+        const isCaughtResult = pendingResultRoom?.lastRoundCaught;
+        if (showCountdown && isCaughtResult && otherPlayerInfo?.drawnImage) {
+            console.log('Scare Preparation: Starting...');
+            // 逃げる側（エレベーター内）なら迫ってくる「body_attack.png」、外側なら襲われる「body_caught.png」
+            const bodySrc = isEscape ? "/body_attack.png" : "/body_caught.png";
+            processImage(bodySrc).then(setProcessedBody);
+            processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
+            
+            const audio = new Audio('/scare_sound.mp3');
+            audio.volume = 1.0;
+            audio.play().catch(e => console.log('Audio error:', e));
+        }
+    }, [showCountdown, pendingResultRoom?.lastRoundCaught, otherPlayerInfo?.drawnImage, isEscape]);
+
     if (showCountdown) {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
-
-        // 【背景透過ユーティリティ】
-        const processImage = (src: string): Promise<string> => {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.src = src;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) { resolve(src); return; }
-                    ctx.drawImage(img, 0, 0);
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imageData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i], g = data[i + 1], b = data[i + 2];
-                        // 白および非常に明るい色を透明にする (閾値は環境に合わせて調整可能)
-                        if (r > 240 && g > 240 && b > 240) {
-                            data[i + 3] = 0;
-                        }
-                    }
-                    ctx.putImageData(imageData, 0, 0);
-                    resolve(canvas.toDataURL());
-                };
-                img.onerror = () => resolve(src);
-            });
-        };
-
-        const [processedBody, setProcessedBody] = useState<string | null>(null);
-        const [processedFace, setProcessedFace] = useState<string | null>(null);
-
-        useEffect(() => {
-            if (isCaughtResult && otherPlayerInfo?.drawnImage) {
-                const bodySrc = isEscape ? "/body_attack.png" : "/body_fear.png";
-                processImage(bodySrc).then(setProcessedBody);
-                processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
-                
-                // 初回読み込み時にのみサウンド再生
-                const audio = new Audio('/scare_sound.mp3');
-                audio.volume = 1.0;
-                audio.play().catch(e => console.log('Audio error:', e));
-            }
-        }, [isCaughtResult, otherPlayerInfo?.drawnImage, isEscape]);
 
         return (
             <div className="screen-container" style={{ padding: 0, position: 'relative' }}>
@@ -121,15 +138,15 @@ function Game({ appState }: Props) {
                             {isCaughtResult && processedFace && processedBody && (
                                 <div style={{ 
                                     position: 'relative', 
-                                    width: isEscape ? '350px' : '260px', 
-                                    height: isEscape ? '450px' : '320px', 
+                                    width: isEscape ? '350px' : '300px', 
+                                    height: isEscape ? '450px' : '400px', 
                                     display: 'flex', 
                                     flexDirection: 'column', 
                                     alignItems: 'center', 
                                     overflow: 'visible', 
-                                    animation: isEscape ? 'dashTowards 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'fx-flicker 0.5s infinite',
-                                    transform: isEscape ? 'scale(1.3)' : 'scale(1)',
-                                    marginTop: isEscape ? '0' : '20px'
+                                    animation: isEscape ? 'creep-forward-inside 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards' : 'fx-flicker 0.4s infinite',
+                                    transform: isEscape ? 'scale(1.3)' : 'scale(1.0)',
+                                    marginTop: isEscape ? '0' : '50px'
                                 }}>
                                     <img 
                                         src={processedBody} 
@@ -141,8 +158,9 @@ function Game({ appState }: Props) {
                                         alt="scare face" 
                                         style={{ 
                                             position: 'absolute', 
-                                            top: isEscape ? '22%' : '32%', 
-                                            width: isEscape ? '35%' : '30%', 
+                                            // 顔の首元への配置調整
+                                            top: isEscape ? '20%' : '-10%', 
+                                            width: isEscape ? '35%' : '48%', 
                                             zIndex: 9999, 
                                             mixBlendMode: 'normal', 
                                             filter: 'drop-shadow(0 0 15px red) contrast(1.2)', 
