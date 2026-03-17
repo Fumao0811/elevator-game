@@ -134,7 +134,7 @@ function Game({ appState }: Props) {
                 <div className={`door-container ${doorsOpening ? 'doors-opening' : ''} ${!isEscape ? 'walk-towards' : ''}`}>
                     <h1 className="fx-flicker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '5rem', color: '#ff2a3a', zIndex: 1000, pointerEvents: 'none', textShadow: '0 0 10px #000, 0 0 20px #ff0000', opacity: doorsOpening ? 0 : 1, transition: 'opacity 0.2s' }}>{countdownNum > 0 ? countdownNum : 'OPEN!'}</h1>
                     {countdownNum <= 0 && pendingResultRoom && (
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_empty.png)`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none' }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none' }}>
                             {isCaughtResult && processedFace && processedBody && (
                                 <div style={{ 
                                     position: 'relative', 
