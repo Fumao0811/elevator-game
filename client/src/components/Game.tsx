@@ -139,6 +139,17 @@ function Game({ appState }: Props) {
                     
                     {/* 扉の奥（背景） */}
                     {countdownNum <= 0 && pendingResultRoom && (
+                        <div style={{ 
+                            position: 'absolute', 
+                            top: 0, left: 0, right: 0, bottom: 0, 
+                            backgroundImage: `url(/${isEscape ? 'elevator_opened_inside.png' : 'elevator_opened_outside.png'})`, 
+                            backgroundSize: 'cover', 
+                            backgroundPosition: 'center', 
+                            zIndex: 10, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            // 襲う側ならカメラが奥へ踏み込む、襲われる側ならそのまま
                             animation: (!isEscape && isCaughtResult) ? 'camera-step-in 3.5s forwards' : 'none'
                         }}>
                             {/* ジャンプスケアの顔 */}
