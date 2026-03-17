@@ -149,8 +149,8 @@ function Game({ appState }: Props) {
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
-                            // 追いかける側ならカメラが奥へ踏み込む、逃げる側ならそのまま
-                            animation: (!isEscape && isCaughtResult) ? 'camera-step-in 3.5s forwards' : 'none'
+                            // 追いかける側ならカメラが壁に向かってじわじわ踏み込む
+                            animation: (!isEscape) ? 'camera-step-in 4s cubic-bezier(0.4, 0, 0.2, 1) forwards' : 'none'
                         }}>
                             {/* ジャンプスケアの顔 */}
                             {isCaughtResult && processedFace && (
