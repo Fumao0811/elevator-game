@@ -133,40 +133,69 @@ function Game({ appState }: Props) {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
 
         return (
-            <div className="screen-container" style={{ padding: 0, position: 'relative' }}>
-                <div className={`door-container ${doorsOpening ? 'doors-opening' : ''} ${!isEscape ? 'walk-towards' : ''}`}>
+            <div className="screen-container" style={{ padding: 0, position: 'relative', overflow: 'hidden' }}>
+                <div className={`door-container ${doorsOpening ? 'doors-opening' : ''}`}>
                     <h1 className="fx-flicker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '5rem', color: '#ff2a3a', zIndex: 1000, pointerEvents: 'none', textShadow: '0 0 10px #000, 0 0 20px #ff0000', opacity: doorsOpening ? 0 : 1, transition: 'opacity 0.2s' }}>{countdownNum > 0 ? countdownNum : 'OPEN!'}</h1>
+                    
+                    {/* 扉の奥（背景） */}
                     {countdownNum <= 0 && pendingResultRoom && (
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none' }}>
+                        <div style={{ 
+                            position: 'absolute', 
+                            top: 0, left: 0, right: 0, bottom: 0, 
+                            backgroundImage: `url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, 
+                            backgroundSize: 'cover', 
+                            backgroundPosition: 'center', 
+                            zIndex: 10, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            // 襲う側ならカメラが奥へ踏み込む、襲われる側ならそのまま
+                            animation: (!isEscape && isCaughtResult) ? 'camera-step-in 3.5s forwards' : 'none'
+                        }}>
+                            {/* ジャンプスケアの顔 */}
                             {isCaughtResult && processedFace && (
                                 <div style={{ 
                                     position: 'relative', 
-                                    width: '100vw', 
-                                    height: '100vh', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center',
-                                    animation: 'fx-flicker 0.4s infinite'
+                                    zIndex: 20,
+                                    width: '100%',
+                                    height: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}>
                                     <img 
                                         src={processedFace} 
                                         alt="scare face" 
                                         style={{ 
-                                            width: isEscape ? '60%' : '50%', 
-                                            maxWidth: '500px',
-                                            zIndex: 9999, 
-                                            filter: 'drop-shadow(0 0 25px red) contrast(1.3)', 
-                                            animation: isEscape ? 'creep-forward-inside 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards' : 'none'
+                                            width: isEscape ? '40%' : '50%', 
+                                            maxWidth: '450px',
+                                            filter: 'drop-shadow(0 0 30px red) contrast(1.4) brightness(0.8)', 
+                                            // 襲われる側：外から入ってくる / 襲う側：中で待ち構えている（自分が近づく）
+                                            animation: isEscape ? 'ghost-creep-in 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards' : 'fx-flicker 0.2s infinite'
                                         }} 
                                     />
                                 </div>
                             )}
                         </div>
                     )}
-                    <div className="door-panel door-left"></div>
-                    <div className="door-panel door-right"></div>
+
+                    <div className="door-panel door-left" style={{ backgroundImage: `url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, backgroundSize: '200% 100%', backgroundPosition: '0% center' }}></div>
+                    <div className="door-panel door-right" style={{ backgroundImage: `url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, backgroundSize: '200% 100%', backgroundPosition: '100% center' }}></div>
+                    
                     <div style={{ position: 'absolute', top: '10%', left: '0', right: '0', textAlign: 'center', zIndex: 1100, animation: 'fadeIn 0.5s ease forwards' }}><h2 style={{ display: 'inline-block', backgroundColor: 'rgba(0,0,0,0.85)', padding: '10px 30px', borderRadius: '50px', color: isEscape ? '#4aff4a' : '#ff4a5a', border: `2px solid ${isEscape ? '#4aff4a' : '#ff4a5a'}`, boxShadow: `0 0 20px ${isEscape ? 'rgba(74,255,74,0.5)' : 'rgba(255,74,90,0.5)'}`, fontSize: '1.5rem', fontWeight: 'bold' }}>あなたは 【{isEscape ? 'エレベーターの中' : 'エレベーターの外'}】</h2></div>
                 </div>
+
+                <style>{`
+                    @keyframes ghost-creep-in {
+                        0% { transform: scale(0.1) translateY(50px); opacity: 0; filter: brightness(0); }
+                        40% { transform: scale(0.5); opacity: 1; filter: brightness(0.5); }
+                        100% { transform: scale(1.5); opacity: 1; filter: brightness(1.2); }
+                    }
+                    @keyframes camera-step-in {
+                        0% { transform: scale(1); }
+                        100% { transform: scale(1.8); }
+                    }
+                `}</style>
             </div>
         );
     }
