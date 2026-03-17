@@ -149,7 +149,7 @@ function Game({ appState }: Props) {
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
-                            // 襲う側ならカメラが奥へ踏み込む、襲われる側ならそのまま
+                            // 追いかける側ならカメラが奥へ踏み込む、逃げる側ならそのまま
                             animation: (!isEscape && isCaughtResult) ? 'camera-step-in 3.5s forwards' : 'none'
                         }}>
                             {/* ジャンプスケアの顔 */}
@@ -170,7 +170,7 @@ function Game({ appState }: Props) {
                                             width: isEscape ? '40%' : '50%', 
                                             maxWidth: '450px',
                                             filter: 'drop-shadow(0 0 30px red) contrast(1.4) brightness(0.8)', 
-                                            // 襲われる側：外から入ってくる / 襲う側：中で待ち構えている（自分が近づく）
+                                            // 逃げる側：外から入ってくる / 追いかける側：中で待ち構えている（自分が近づく）
                                             animation: isEscape ? 'ghost-creep-in 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards' : 'fx-flicker 0.2s infinite'
                                         }} 
                                     />
