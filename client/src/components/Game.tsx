@@ -59,16 +59,23 @@ function Game({ appState }: Props) {
         return () => clearTimeout(timerId);
     }, [selectTimeLeft, isWaiting, showCountdown, pendingResultRoom, forbiddenFloor]);
     useEffect(() => {
-        if (showCountdown && countdownNum === 0 && !doorsOpening && pendingResultRoom) {
-            setDoorsOpening(true);
-            // 4.5秒後に結果画面へ遷移（Game側のアニメーション終了を待ってからResultに切り替える）
-            // 少し長めに待機して、Result側で画像読み込みが間に合うようにする
-            const timer = setTimeout(() => { 
-                console.log('Door Transition: Navigating to result...');
-                appState.setRoom(pendingResultRoom); 
-                navigate('/result'); 
-            }, 4500);
-            return () => clearTimeout(timer);
+        if (showCountdown && countdownNum === 0 && pendingResultRoom) {
+            if (!doorsOpening) {
+                console.log('Door Transition: Opening doors triggered');
+                setDoorsOpening(true);
+                
+                // 演出時間を少し調整し、確実に遷移させる
+                // ジャンプスケアがある場合（lastRoundCaught）は長めに、ない場合は標準的に
+                const delay = pendingResultRoom.lastRoundCaught ? 4500 : 3000;
+                
+                const timer = setTimeout(() => { 
+                    console.log(`Door Transition: Navigating to result after ${delay}ms...`);
+                    // 遷移直前に最新のルーム情報をセット
+                    appState.setRoom(pendingResultRoom); 
+                    navigate('/result'); 
+                }, delay);
+                return () => clearTimeout(timer);
+            }
         }
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
     const [processedBody, setProcessedBody] = useState<string | null>(null);
