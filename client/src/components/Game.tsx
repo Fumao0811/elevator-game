@@ -60,14 +60,14 @@ function Game({ appState }: Props) {
     }, [selectTimeLeft, isWaiting, showCountdown, pendingResultRoom, forbiddenFloor]);
     useEffect(() => {
         if (showCountdown && countdownNum === 0 && !doorsOpening && pendingResultRoom) {
-            console.log('Door Transition: Opening doors...');
             setDoorsOpening(true);
-            // 3.8秒後に結果画面へ遷移（Game側のアニメーション終了を待ってからResultに切り替える）
+            // 4.5秒後に結果画面へ遷移（Game側のアニメーション終了を待ってからResultに切り替える）
+            // 少し長めに待機して、Result側で画像読み込みが間に合うようにする
             const timer = setTimeout(() => { 
                 console.log('Door Transition: Navigating to result...');
                 appState.setRoom(pendingResultRoom); 
                 navigate('/result'); 
-            }, 3800);
+            }, 4500);
             return () => clearTimeout(timer);
         }
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
@@ -159,8 +159,9 @@ function Game({ appState }: Props) {
                                         style={{ 
                                             position: 'absolute', 
                                             // 顔の首元への配置調整
-                                            top: isEscape ? '20%' : '-10%', 
-                                            width: isEscape ? '35%' : '48%', 
+                                            top: isEscape ? '20%' : '-15%', 
+                                            left: isEscape ? 'auto' : '20%',
+                                            width: isEscape ? '35%' : '30%', 
                                             zIndex: 9999, 
                                             mixBlendMode: 'normal', 
                                             filter: 'drop-shadow(0 0 15px red) contrast(1.2)', 

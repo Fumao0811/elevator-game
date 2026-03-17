@@ -134,7 +134,7 @@ function Result({ appState }: Props) {
         <div className="screen-container">
             {showScare ? (
                 <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite' }}>
-                    {processedFace && processedBody && (
+                    {processedFace && processedBody ? (
                         <div style={{ 
                             position: 'relative', 
                             width: '100%', 
@@ -144,8 +144,8 @@ function Result({ appState }: Props) {
                             flexDirection: 'column', 
                             alignItems: 'center', 
                             overflow: 'visible',
-                            transform: wasEscape ? 'scale(1.1)' : 'scale(1.4)',
-                            marginTop: wasEscape ? '50px' : '0'
+                            transform: wasEscape ? 'scale(1.2)' : 'scale(1.4)',
+                            marginTop: wasEscape ? '40px' : '0'
                         }}>
                             <img 
                                 src={processedBody} 
@@ -157,9 +157,10 @@ function Result({ appState }: Props) {
                                 alt="Scare Face" 
                                 style={{ 
                                     position: 'absolute', 
-                                    // 顔の首元配置。wasEscape(襲われる側) と 襲う側で調整
-                                    top: wasEscape ? '-5%' : '20%', 
-                                    width: wasEscape ? '42%' : '38%', 
+                                    // 顔の首元配置
+                                    top: wasEscape ? '-10%' : '20%', 
+                                    left: wasEscape ? '22%' : 'auto',
+                                    width: wasEscape ? '28%' : '38%', 
                                     zIndex: 9999, 
                                     mixBlendMode: 'normal', 
                                     filter: 'drop-shadow(0 0 30px red) contrast(150%)', 
@@ -167,6 +168,8 @@ function Result({ appState }: Props) {
                                 }} 
                             />
                         </div>
+                    ) : (
+                        <div style={{ color: '#ff2a3a', fontSize: '2rem' }}>Loading Scare...</div>
                     )}
                 </div>
             ) : (
