@@ -42,7 +42,6 @@ function Result({ appState }: Props) {
         const timerId = setTimeout(() => { setTimeLeft(prev => prev - 1); }, 1000);
         return () => clearTimeout(timerId);
     }, [showScare, timeLeft, isFinished]);
-    const [processedBody, setProcessedBody] = useState<string | null>(null);
     const [processedFace, setProcessedFace] = useState<string | null>(null);
 
     // 【背景透過ユーティリティ】
@@ -74,14 +73,10 @@ function Result({ appState }: Props) {
     };
 
     useEffect(() => {
-        const wasEscape = myPlayerInfo?.role === 'WAIT';
         if (showScare && otherPlayerInfo?.drawnImage) {
-            // 逃走側（待伏によって捕まった側）なら襲われる「body_caught.png」、待伏側なら迫る「body_attack.png」
-            const bodySrc = wasEscape ? "/body_caught.png" : "/body_attack.png";
-            processImage(bodySrc).then(setProcessedBody);
             processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
         }
-    }, [showScare, otherPlayerInfo?.drawnImage, myPlayerInfo?.role]);
+    }, [showScare, otherPlayerInfo?.drawnImage]);
 
     if (!room || !myPlayerInfo) return null;
 
@@ -134,42 +129,29 @@ function Result({ appState }: Props) {
         <div className="screen-container">
             {showScare ? (
                 <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite', backgroundImage: `radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%), url(/door_${wasEscape ? 'inside_new' : 'outside_new'}.png)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                    {processedFace && processedBody ? (
+                    {processedFace ? (
                         <div style={{ 
                             position: 'relative', 
                             width: '100%', 
-                            maxWidth: '700px', 
-                            height: '85vh', 
                             display: 'flex', 
-                            flexDirection: 'column', 
                             alignItems: 'center', 
-                            overflow: 'visible',
-                            transform: wasEscape ? 'scale(1.2)' : 'scale(1.4)',
-                            marginTop: wasEscape ? '40px' : '0'
+                            justifyContent: 'center',
+                            animation: 'fx-flicker 0.1s infinite'
                         }}>
-                            <img 
-                                src={processedBody} 
-                                alt="scary body" 
-                                style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, display: 'block' }} 
-                            />
                             <img 
                                 src={processedFace} 
                                 alt="Scare Face" 
                                 style={{ 
-                                    position: 'absolute', 
-                                    // 顔の首元配置
-                                    top: wasEscape ? '-10%' : '20%', 
-                                    left: wasEscape ? '22%' : 'auto',
-                                    width: wasEscape ? '28%' : '38%', 
+                                    width: wasEscape ? '70%' : '85%', 
+                                    maxWidth: '600px',
                                     zIndex: 9999, 
-                                    mixBlendMode: 'normal', 
-                                    filter: 'drop-shadow(0 0 30px red) contrast(150%)', 
-                                    animation: 'fx-flicker 0.1s infinite' 
+                                    filter: 'drop-shadow(0 0 40px red) contrast(170%)', 
+                                    transform: wasEscape ? 'scale(1.0)' : 'scale(1.2)'
                                 }} 
                             />
                         </div>
                     ) : (
-                        <div style={{ color: '#ff2a3a', fontSize: '2rem' }}>Loading Scare...</div>
+                        <div style={{ color: '#ff2a3a', fontSize: '2rem', animation: 'pulse 1s infinite' }}>Loading Scare...</div>
                     )}
                 </div>
             ) : (

@@ -78,7 +78,6 @@ function Game({ appState }: Props) {
             }
         }
     }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
-    const [processedBody, setProcessedBody] = useState<string | null>(null);
     const [processedFace, setProcessedFace] = useState<string | null>(null);
 
     // 【背景透過ユーティリティ】
@@ -121,17 +120,14 @@ function Game({ appState }: Props) {
     useEffect(() => {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
         if (showCountdown && isCaughtResult && otherPlayerInfo?.drawnImage) {
-            console.log('Scare Preparation: Starting...');
-            // 逃げる側（エレベーター内）なら迫ってくる「body_attack.png」、外側なら襲われる「body_caught.png」
-            const bodySrc = isEscape ? "/body_attack.png" : "/body_caught.png";
-            processImage(bodySrc).then(setProcessedBody);
+            console.log('Scare Preparation: Processing face...');
             processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
             
             const audio = new Audio('/scare_sound.mp3');
             audio.volume = 1.0;
             audio.play().catch(e => console.log('Audio error:', e));
         }
-    }, [showCountdown, pendingResultRoom?.lastRoundCaught, otherPlayerInfo?.drawnImage, isEscape]);
+    }, [showCountdown, pendingResultRoom?.lastRoundCaught, otherPlayerInfo?.drawnImage]);
 
     if (showCountdown) {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
@@ -142,37 +138,25 @@ function Game({ appState }: Props) {
                     <h1 className="fx-flicker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '5rem', color: '#ff2a3a', zIndex: 1000, pointerEvents: 'none', textShadow: '0 0 10px #000, 0 0 20px #ff0000', opacity: doorsOpening ? 0 : 1, transition: 'opacity 0.2s' }}>{countdownNum > 0 ? countdownNum : 'OPEN!'}</h1>
                     {countdownNum <= 0 && pendingResultRoom && (
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `radial-gradient(circle at center, rgba(220,220,220,0.3) 0%, rgba(0,0,0,0) 55%), url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: (!isEscape && isCaughtResult) ? 'dashInside 3.4s cubic-bezier(0.5, 0, 0.9, 0.2) forwards' : 'none' }}>
-                            {isCaughtResult && processedFace && processedBody && (
+                            {isCaughtResult && processedFace && (
                                 <div style={{ 
                                     position: 'relative', 
-                                    width: isEscape ? '350px' : '300px', 
-                                    height: isEscape ? '450px' : '400px', 
+                                    width: '100vw', 
+                                    height: '100vh', 
                                     display: 'flex', 
-                                    flexDirection: 'column', 
                                     alignItems: 'center', 
-                                    overflow: 'visible', 
-                                    animation: isEscape ? 'creep-forward-inside 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards' : 'fx-flicker 0.4s infinite',
-                                    transform: isEscape ? 'scale(1.3)' : 'scale(1.0)',
-                                    marginTop: isEscape ? '0' : '50px'
+                                    justifyContent: 'center',
+                                    animation: 'fx-flicker 0.4s infinite'
                                 }}>
-                                    <img 
-                                        src={processedBody} 
-                                        alt="scary body" 
-                                        style={{ position: 'absolute', top: '0', height: '100%', width: 'auto', zIndex: 9998, filter: 'brightness(1.1) contrast(1.1)' }} 
-                                    />
                                     <img 
                                         src={processedFace} 
                                         alt="scare face" 
                                         style={{ 
-                                            position: 'absolute', 
-                                            // 顔の首元への配置調整
-                                            top: isEscape ? '20%' : '-15%', 
-                                            left: isEscape ? 'auto' : '20%',
-                                            width: isEscape ? '35%' : '30%', 
+                                            width: isEscape ? '60%' : '50%', 
+                                            maxWidth: '500px',
                                             zIndex: 9999, 
-                                            mixBlendMode: 'normal', 
-                                            filter: 'drop-shadow(0 0 15px red) contrast(1.2)', 
-                                            animation: 'fx-flicker 0.2s infinite' 
+                                            filter: 'drop-shadow(0 0 25px red) contrast(1.3)', 
+                                            animation: isEscape ? 'creep-forward-inside 3.4s cubic-bezier(0.6, 0.1, 0.8, 0.1) forwards' : 'none'
                                         }} 
                                     />
                                 </div>
