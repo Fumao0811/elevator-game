@@ -59,25 +59,25 @@ function Game({ appState }: Props) {
         return () => clearTimeout(timerId);
     }, [selectTimeLeft, isWaiting, showCountdown, pendingResultRoom, forbiddenFloor]);
     useEffect(() => {
-        if (showCountdown && countdownNum === 0 && pendingResultRoom) {
-            if (!doorsOpening) {
-                console.log('Door Transition: Opening doors triggered');
-                setDoorsOpening(true);
-                
-                // 演出時間を少し調整し、確実に遷移させる
-                // ジャンプスケアがある場合（lastRoundCaught）は長めに、ない場合は標準的に
-                const delay = pendingResultRoom.lastRoundCaught ? 4500 : 3000;
-                
-                const timer = setTimeout(() => { 
-                    console.log(`Door Transition: Navigating to result after ${delay}ms...`);
-                    // 遷移直前に最新のルーム情報をセット
-                    appState.setRoom(pendingResultRoom); 
-                    navigate('/result'); 
-                }, delay);
-                return () => clearTimeout(timer);
-            }
+        if (showCountdown && countdownNum === 0 && pendingResultRoom && !doorsOpening) {
+            console.log('Door Transition: Triggering transition sequence');
+            setDoorsOpening(true);
+            
+            // 演出時間を設定。ジャンプスケアがある場合は長めに、ない場合は標準的に。
+            const delay = pendingResultRoom.lastRoundCaught ? 4500 : 3000;
+            
+            const timer = setTimeout(() => { 
+                console.log(`Door Transition: Navigating to result after ${delay}ms...`);
+                appState.setRoom(pendingResultRoom); 
+                navigate('/result'); 
+            }, delay);
+            
+            return () => {
+                console.log('Door Transition: Effect cleanup occurred');
+                clearTimeout(timer);
+            };
         }
-    }, [showCountdown, countdownNum, doorsOpening, pendingResultRoom, navigate, appState]);
+    }, [showCountdown, countdownNum, pendingResultRoom, navigate, appState]); // doorsOpening を依存関係から外すことで、setDoorsOpening(true) による再実行とタイマー破棄を阻止
     const [processedFace, setProcessedFace] = useState<string | null>(null);
 
     // 【背景透過ユーティリティ】
