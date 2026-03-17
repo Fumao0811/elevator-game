@@ -128,7 +128,7 @@ function Result({ appState }: Props) {
     return (
         <div className="screen-container">
             {showScare ? (
-                <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite', backgroundImage: `url(/${wasEscape ? 'elevator_opened_inside.png' : 'elevator_opened_outside.png'})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div style={{ backgroundColor: '#000', width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, zIndex: 9999, animation: 'shake 0.1s cubic-bezier(.36,.07,.19,.97) both infinite, flashBg 0.5s infinite', backgroundImage: `radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.5) 80%), url(/${wasEscape ? 'elevator_opened_inside.png' : 'elevator_opened_outside.png'})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                     {processedFace ? (
                         <div style={{ 
                             position: 'relative', 

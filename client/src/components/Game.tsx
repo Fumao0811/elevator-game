@@ -142,7 +142,7 @@ function Game({ appState }: Props) {
                         <div style={{ 
                             position: 'absolute', 
                             top: 0, left: 0, right: 0, bottom: 0, 
-                            backgroundImage: `url(/${isEscape ? 'elevator_opened_inside.png' : 'elevator_opened_outside.png'})`, 
+                            backgroundImage: `radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.4) 70%), url(/${isEscape ? 'elevator_opened_inside.png' : 'elevator_opened_outside.png'})`, 
                             backgroundSize: 'cover', 
                             backgroundPosition: 'center', 
                             zIndex: 10, 
