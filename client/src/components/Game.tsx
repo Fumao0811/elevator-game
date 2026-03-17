@@ -142,7 +142,7 @@ function Game({ appState }: Props) {
                         <div style={{ 
                             position: 'absolute', 
                             top: 0, left: 0, right: 0, bottom: 0, 
-                            backgroundImage: `url(/door_${isEscape ? 'inside_new' : 'outside_new'}.png)`, 
+                            backgroundImage: `url(/${isEscape ? 'door_inside_new.png' : 'elevator_opened_outside.png'})`, 
                             backgroundSize: 'cover', 
                             backgroundPosition: 'center', 
                             zIndex: 10, 
