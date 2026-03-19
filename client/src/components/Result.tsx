@@ -157,7 +157,7 @@ function Result({ appState }: Props) {
             ) : (
                 <div className="result-content" style={{ animation: 'fadeIn 0.5s ease' }}>
                     <div style={{ marginBottom: '40px' }}>
-                        <h1 style={{ fontSize: '3rem', color: isCaught ? '#ff2a3a' : '#4aff4a', textShadow: '0 0 20px rgba(0,0,0,0.8)' }}>{resultText}</h1>
+                        <h1 style={{ fontSize: '3rem', color: (wasEscape ? !isCaught : isCaught) ? '#4aff4a' : '#ff2a3a', textShadow: '0 0 20px rgba(0,0,0,0.8)' }}>{resultText}</h1>
                         <p style={{ marginTop: '10px', fontSize: '1.2rem', color: '#ccc' }}>{resultSubText}</p>
                         <div style={{ marginTop: '20px', padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', display: 'inline-block', color: '#e0e0e0', border: '1px solid rgba(255,255,255,0.2)' }}><span style={{ fontSize: '0.9rem', color: '#aaa', display: 'block', marginBottom: '4px' }}>【答え合わせ】</span><span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{answerText}</span></div>
                     </div>
