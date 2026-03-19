@@ -90,7 +90,7 @@ const Paint: React.FC<Props> = ({ appState }) => {
             const ctx = canvas.getContext('2d');
             if (ctx) { ctx.lineCap = 'round'; ctx.lineJoin = 'round'; }
         }
-    }, [currentColor]);
+    }, []);
     return (
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h2 style={{ color: '#fff' }}>おばけを描け！</h2>
