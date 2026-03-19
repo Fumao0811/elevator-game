@@ -17,7 +17,7 @@ function Game({ appState }: Props) {
         if (room?.round) {
             setSplashStep(1);
             const timer1 = setTimeout(() => { setSplashStep(2); }, 2000);
-            const timer2 = setTimeout(() => { setSplashStep(0); }, 4000);
+            const timer2 = setTimeout(() => { setSplashStep(0); }, 5000);
             return () => { clearTimeout(timer1); clearTimeout(timer2); };
         }
     }, [room?.round]);
@@ -210,8 +210,8 @@ function Game({ appState }: Props) {
                 </div>
             )}
             {splashStep === 2 && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeOutSplash 2s forwards' }}>
-                    <h1 style={{ fontSize: '2.5rem', color: isEscape ? '#4aff4a' : '#ff4a5a', textShadow: '0 0 15px rgba(0,0,0,0.8)', letterSpacing: '2px', animation: 'scaleUpSplash 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards', textAlign: 'center', padding: '0 20px', lineHeight: '1.4' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeOutSplash 3s forwards' }}>
+                    <h1 style={{ fontSize: '2.5rem', color: isEscape ? '#4aff4a' : '#ff4a5a', textShadow: '0 0 15px rgba(0,0,0,0.8)', letterSpacing: '2px', animation: 'scaleUpSplash 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards', textAlign: 'center', padding: '0 20px', lineHeight: '1.4' }}>
                         {isEscape ? '相手から逃げてください。' : '相手を見つけてください。'}
                     </h1>
                 </div>
