@@ -11,13 +11,14 @@ function Game({ appState }: Props) {
     const [countdownNum, setCountdownNum] = useState(3);
     const [doorsOpening, setDoorsOpening] = useState(false);
     const [pendingResultRoom, setPendingResultRoom] = useState<any>(null);
-    const [showRoundSplash, setShowRoundSplash] = useState(true);
+    const [splashStep, setSplashStep] = useState(0); // 0: off, 1: Round/Turn, 2: Role info
     const [selectTimeLeft, setSelectTimeLeft] = useState(30);
     useEffect(() => {
         if (room?.round) {
-            setShowRoundSplash(true);
-            const timer = setTimeout(() => { setShowRoundSplash(false); }, 2000);
-            return () => clearTimeout(timer);
+            setSplashStep(1);
+            const timer1 = setTimeout(() => { setSplashStep(2); }, 2000);
+            const timer2 = setTimeout(() => { setSplashStep(0); }, 4000);
+            return () => { clearTimeout(timer1); clearTimeout(timer2); };
         }
     }, [room?.round]);
     useEffect(() => {
@@ -202,10 +203,17 @@ function Game({ appState }: Props) {
     const bgImage = isEscape ? '/bg_inside.png' : '/bg_outside.png';
     return (
         <div className="screen-container game-bg-anim" style={{ justifyContent: 'flex-start', paddingTop: '40px', backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
-            {showRoundSplash && (
+            {splashStep === 1 && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeOutSplash 2s forwards' }}>
                     <h1 style={{ fontSize: '3.5rem', color: '#fff', textShadow: '0 0 20px #ff2a3a', letterSpacing: '5px', animation: 'scaleUpSplash 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' }}>Round {room.round}</h1>
                     <h2 style={{ fontSize: '2rem', color: '#ff4a5a', marginTop: '10px', animation: 'scaleUpSplash 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' }}>- {room.turn === 1 ? '表' : '裏'} -</h2>
+                </div>
+            )}
+            {splashStep === 2 && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeOutSplash 2s forwards' }}>
+                    <h1 style={{ fontSize: '2.5rem', color: isEscape ? '#4aff4a' : '#ff4a5a', textShadow: '0 0 15px rgba(0,0,0,0.8)', letterSpacing: '2px', animation: 'scaleUpSplash 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards', textAlign: 'center', padding: '0 20px', lineHeight: '1.4' }}>
+                        {isEscape ? '相手から逃げてください。' : '相手を見つけてください。'}
+                    </h1>
                 </div>
             )}
             <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0,0,0,0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #444', marginBottom: '10px' }}>
