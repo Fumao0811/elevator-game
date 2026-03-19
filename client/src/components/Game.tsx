@@ -135,7 +135,7 @@ function Game({ appState }: Props) {
         return (
             <div className="screen-container" style={{ padding: 0, position: 'relative', overflow: 'hidden' }}>
                 <div className={`door-container ${doorsOpening ? 'doors-opening' : ''}`}>
-                    <h1 className="fx-flicker" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '5rem', color: '#ff2a3a', zIndex: 1000, pointerEvents: 'none', textShadow: '0 0 10px #000, 0 0 20px #ff0000', opacity: doorsOpening ? 0 : 1, transition: 'opacity 0.2s' }}>{countdownNum > 0 ? countdownNum : 'OPEN!'}</h1>
+                    {/* カウントダウン文字は非表示 */}
                     
                     {/* 扉の奥（背景） */}
                     {countdownNum <= 0 && pendingResultRoom && (
