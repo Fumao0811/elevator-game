@@ -16,7 +16,8 @@ const Paint: React.FC<Props> = ({ appState }) => {
     const [currentColor, setCurrentColor] = useState('#000000');
     const [isEraser, setIsEraser] = useState(false);
     const [lineWidth, setLineWidth] = useState<number>(8);
-    const [timeLeft, setTimeLeft] = useState(30);
+    const [timeLeft, setTimeLeft] = useState(60);
+    const [splashStep, setSplashStep] = useState(1);
     
     // Outline & UI State
     const [selectedOutline, setSelectedOutline] = useState<string>('none');
@@ -31,11 +32,18 @@ const Paint: React.FC<Props> = ({ appState }) => {
     }, [socket, room, navigate, setRoom]);
     
     useEffect(() => {
-        if (isSubmitted) return;
+        if (isSubmitted || splashStep === 1) return;
         if (timeLeft <= 0) { submitDrawing(); return; }
         const timerId = setTimeout(() => { setTimeLeft(prev => prev - 1); }, 1000);
         return () => clearTimeout(timerId);
-    }, [timeLeft, isSubmitted]);
+    }, [timeLeft, isSubmitted, splashStep]);
+
+    useEffect(() => {
+        if (splashStep === 1) {
+            const timer = setTimeout(() => { setSplashStep(0); }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [splashStep]);
     
     useEffect(() => {
         const bgCanvas = bgCanvasRef.current;
@@ -50,7 +58,7 @@ const Paint: React.FC<Props> = ({ appState }) => {
         const height = bgCanvas.height;
         ctx.fillStyle = outlineBgColor;
         
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = outlineBgColor;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.lineWidth = 5;
@@ -155,6 +163,16 @@ const Paint: React.FC<Props> = ({ appState }) => {
             socket.emit('submit_drawing', { roomId: room.roomId, imageBase64: finalCanvas.toDataURL('image/png') });
         }
     };
+
+    if (splashStep === 1) {
+        return (
+            <div className="screen-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
+                <h1 style={{ fontSize: '2.5rem', color: '#fff', textAlign: 'center', animation: 'scaleUpSplash 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards', padding: '0 20px', lineHeight: '1.5' }}>
+                    今から絵を描いてください
+                </h1>
+            </div>
+        );
+    }
 
     return (
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

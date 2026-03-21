@@ -44,32 +44,9 @@ function Result({ appState }: Props) {
     }, [showScare, timeLeft, isFinished]);
     const [processedFace, setProcessedFace] = useState<string | null>(null);
 
-    // 【背景透過ユーティリティ】
+    // 【背景透過ユーティリティ】現在は透過をやめているためそのまま返す
     const processImage = (src: string): Promise<string> => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = src;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) { resolve(src); return; }
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i + 1], b = data[i + 2];
-                    if (r > 240 && g > 240 && b > 240) {
-                        data[i + 3] = 0;
-                    }
-                }
-                ctx.putImageData(imageData, 0, 0);
-                resolve(canvas.toDataURL());
-            };
-            img.onerror = () => resolve(src);
-        });
+        return Promise.resolve(src);
     };
 
     useEffect(() => {
