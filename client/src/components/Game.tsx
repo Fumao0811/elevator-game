@@ -39,7 +39,7 @@ function Game({ appState }: Props) {
     const forbiddenFloor = isEscape ? myPlayerInfo?.lastEscapedFloor : otherPlayerInfo?.lastEscapedFloor;
     const floors = [1, 2, 3, 4, 5];
     const handleFloorSelect = (floor: number) => {
-        if (isWaiting || showCountdown || floor === forbiddenFloor) return;
+        if (isWaiting || showCountdown || floor === forbiddenFloor || splashStep === 1) return;
 
         // ★ここでも念のためボタンクリック時にサウンド再生権限をブロック解除させておく
         const dummyAudio = new Audio('/scare_sound.mp3');
@@ -225,10 +225,10 @@ function Game({ appState }: Props) {
                 <p style={{ color: '#aaa', fontSize: '0.9rem' }}>あなたは</p><h2 className="highlight-role">{isEscape ? '逃げる側 (中)' : '待ち伏せ側 (外)'}</h2>
                 <p style={{ color: '#888', marginTop: '8px', fontSize: '0.85rem' }}>{isEscape ? 'エレベーターの行き先を選んでください。高層階ほど高得点ですが読まれやすいです。' : '相手が降りる階を予想し、待ち伏せする階を選んでください。'}</p>
             </div>
-            <div className={`elevator-board ${isWaiting ? 'disabled' : ''}`}>
+            <div className={`elevator-board ${(isWaiting || splashStep === 1) ? 'disabled' : ''}`}>
                 {floors.map((floor) => {
                     const isForbidden = floor === forbiddenFloor;
-                    return (<button key={floor} className={`floor-btn ${selectedFloor === floor ? 'selected' : ''} ${isForbidden ? 'forbidden' : ''}`} onClick={() => handleFloorSelect(floor)} disabled={isWaiting || isForbidden} style={{ opacity: isWaiting && selectedFloor !== floor ? 0.3 : 1, filter: isForbidden ? 'grayscale(100%)' : 'none' }}>{floor}F</button>);
+                    return (<button key={floor} className={`floor-btn ${selectedFloor === floor ? 'selected' : ''} ${isForbidden ? 'forbidden' : ''}`} onClick={() => handleFloorSelect(floor)} disabled={isWaiting || isForbidden || splashStep === 1} style={{ opacity: isWaiting && selectedFloor !== floor ? 0.3 : 1, filter: isForbidden ? 'grayscale(100%)' : 'none' }}>{floor}F</button>);
                 })}
             </div>
             {isWaiting && (<div style={{ padding: '10px', color: '#fff', animation: 'pulse 1.5s infinite' }}>相手の選択を待っています...</div>)}
