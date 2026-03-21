@@ -82,10 +82,17 @@ function Result({ appState }: Props) {
 
     const handleNextRound = () => {
         if (!socket) return;
-        if (timeLeft > 0 || isWaitingNext) return;
+        if (isWaitingNext) return;
         socket.emit('ready_next_round', { roomId: room.roomId });
         setIsWaitingNext(true);
     };
+
+    useEffect(() => {
+        if (!isFinished && !isWaitingNext && !showScare && timeLeft === 0 && socket && room) {
+            socket.emit('ready_next_round', { roomId: room.roomId });
+            setIsWaitingNext(true);
+        }
+    }, [timeLeft, isFinished, isWaitingNext, showScare, socket, room]);
     const handleBackToTitle = () => { appState.setRoom(null); navigate('/'); };
     const wasEscape = myPlayerInfo.role === 'WAIT';
 
@@ -172,7 +179,7 @@ function Result({ appState }: Props) {
                         </>
                     )}
                     <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
-                        <button className={`btn ${isWaitingNext || (!isFinished && timeLeft > 0) ? 'disabled' : ''}`} onClick={isFinished ? handleBackToTitle : handleNextRound} disabled={isWaitingNext || (!isFinished && timeLeft > 0)} style={{ width: '250px', opacity: (!isFinished && timeLeft > 0) ? 0.5 : 1, cursor: (!isFinished && timeLeft > 0) ? 'not-allowed' : 'pointer' }}>{isFinished ? 'タイトルへ戻る' : (isWaitingNext ? '相手を待っています...' : (timeLeft > 0 ? `次へ進むまで... ${timeLeft}秒` : '次のラウンドへ'))}</button>
+                        <button className={`btn ${isWaitingNext ? 'disabled' : ''}`} onClick={isFinished ? handleBackToTitle : handleNextRound} disabled={isWaitingNext} style={{ width: '250px', opacity: isWaitingNext ? 0.5 : 1, cursor: isWaitingNext ? 'not-allowed' : 'pointer' }}>{isFinished ? 'タイトルへ戻る' : (isWaitingNext ? '相手を待っています...' : (timeLeft > 0 ? `次のラウンドへ (${timeLeft}秒)` : '次のラウンドへ'))}</button>
                     </div>
                 </div>
             )}
