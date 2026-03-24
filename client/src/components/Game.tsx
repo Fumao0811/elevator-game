@@ -92,12 +92,6 @@ function Game({ appState }: Props) {
             console.log('Scare Preparation: Processing face...');
             processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
             
-            // 逃走側は専用音声、待伏側は通常音声
-            const audioFile = isEscape ? '/scare_sound_escape.mp3' : '/scare_sound.mp3';
-            const audio = new Audio(audioFile);
-            audio.volume = appState.globalVolume;
-            audio.play().catch(e => console.log('Audio error:', e));
-            
             // 足音の追加
             const footstep = new Audio('/footstep.mp3');
             footstep.volume = appState.globalVolume;
