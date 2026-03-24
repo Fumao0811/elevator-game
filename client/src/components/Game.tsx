@@ -92,11 +92,18 @@ function Game({ appState }: Props) {
             console.log('Scare Preparation: Processing face...');
             processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
             
-            const audio = new Audio('/scare_sound.mp3');
-            audio.volume = 1.0;
+            // 逃走側は専用音声、待伏側は通常音声
+            const audioFile = isEscape ? '/scare_sound_escape.mp3' : '/scare_sound.mp3';
+            const audio = new Audio(audioFile);
+            audio.volume = appState.globalVolume;
             audio.play().catch(e => console.log('Audio error:', e));
+            
+            // 足音の追加
+            const footstep = new Audio('/footstep.mp3');
+            footstep.volume = appState.globalVolume;
+            footstep.play().catch(e => console.log('Footstep error:', e));
         }
-    }, [showCountdown, pendingResultRoom?.lastRoundCaught, otherPlayerInfo?.drawnImage]);
+    }, [showCountdown, pendingResultRoom?.lastRoundCaught, otherPlayerInfo?.drawnImage, isEscape, appState.globalVolume]);
 
     if (showCountdown) {
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;

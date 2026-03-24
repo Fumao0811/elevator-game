@@ -8,7 +8,6 @@ function Result({ appState }: Props) {
     const [showScare, setShowScare] = useState(false);
     const [isWaitingNext, setIsWaitingNext] = useState(false);
     const scareAudioRef = useRef<HTMLAudioElement | null>(null);
-    const footstepAudioRef = useRef<HTMLAudioElement | null>(null); // 追加: 足音用
     const [timeLeft, setTimeLeft] = useState(5);
     const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
@@ -25,15 +24,9 @@ function Result({ appState }: Props) {
                 const audioFile = wasEscape ? '/scare_sound_escape.mp3' : '/scare_sound.mp3';
                 scareAudioRef.current = new Audio(audioFile);
             }
-            if (!footstepAudioRef.current) {
-                footstepAudioRef.current = new Audio('/footstep.mp3'); // 足音を追加
-            }
-            // 右上の音量設定をジャンプスケアと足音にも適用
+            // 右上の音量設定をジャンプスケア音にも適用
             scareAudioRef.current.volume = appState.globalVolume;
             scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
-
-            footstepAudioRef.current.volume = appState.globalVolume;
-            footstepAudioRef.current.play().catch(e => console.log('Footstep audio autoplay prevented:', e));
 
             // ジャンプスケア画面の表示時間
             setTimeout(() => {
