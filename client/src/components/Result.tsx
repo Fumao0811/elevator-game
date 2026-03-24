@@ -13,14 +13,19 @@ function Result({ appState }: Props) {
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
     const isCaught = room?.lastRoundCaught;
     const isFinished = room?.status === 'FINISHED';
+    const wasEscape = myPlayerInfo?.role === 'WAIT'; // 逃走側かどうか
+
     useEffect(() => {
         if (!socket || !room) { navigate('/'); return; }
         if (isCaught) {
             setShowScare(true);
             if (!scareAudioRef.current) {
-                scareAudioRef.current = new Audio('/scare_sound.mp3');
-                scareAudioRef.current.volume = 1.0;
+                // 逃走側のみ別の音声ファイルを指定
+                const audioFile = wasEscape ? '/scare_sound_escape.mp3' : '/scare_sound.mp3';
+                scareAudioRef.current = new Audio(audioFile);
             }
+            // 右上の音量設定をジャンプスケア音にも適用
+            scareAudioRef.current.volume = appState.globalVolume;
             scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
             // ジャンプスケア画面の表示時間
             setTimeout(() => {
@@ -71,7 +76,7 @@ function Result({ appState }: Props) {
         }
     }, [timeLeft, isFinished, isWaitingNext, showScare, socket, room]);
     const handleBackToTitle = () => { appState.setRoom(null); navigate('/'); };
-    const wasEscape = myPlayerInfo.role === 'WAIT';
+    // wasEscapeの定義は上部に移動済み
 
     let resultText = "";
     let resultSubText = "";

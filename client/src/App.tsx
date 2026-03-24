@@ -27,7 +27,7 @@ function MainApp() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [nickname, setNickname] = useState<string>('');
   const [room, setRoom] = useState<any | null>(null);
-  const [globalVolume, setGlobalVolume] = useState<number>(0.5); // 初期音量を50%にする
+  const [globalVolume, setGlobalVolume] = useState<number>(0.2); // 初期音量を20%にする
 
   const navigate = useNavigate();
 
