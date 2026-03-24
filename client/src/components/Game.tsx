@@ -42,7 +42,7 @@ function Game({ appState }: Props) {
         if (isWaiting || showCountdown || floor === forbiddenFloor || splashStep === 1) return;
 
         // ★ここでも念のためボタンクリック時にサウンド再生権限をブロック解除させておく
-        const dummyAudio = new Audio('/scare_sound.mp3');
+        const dummyAudio = new Audio('/scare_sound_escape.mp3');
         dummyAudio.volume = 0;
         dummyAudio.play().then(() => { dummyAudio.pause(); dummyAudio.currentTime = 0; }).catch(e => console.log('Audio Blocked:', e));
         setSelectedFloor(floor);
