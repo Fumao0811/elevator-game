@@ -87,24 +87,11 @@ function Game({ appState }: Props) {
     };
 
     useEffect(() => {
-        let footstep: HTMLAudioElement | null = null;
         const isCaughtResult = pendingResultRoom?.lastRoundCaught;
         if (showCountdown && isCaughtResult && otherPlayerInfo?.drawnImage) {
             console.log('Scare Preparation: Processing face...');
             processImage(otherPlayerInfo.drawnImage).then(setProcessedFace);
-            
-            // 足音の追加
-            footstep = new Audio('/footstep.mp3');
-            footstep.volume = appState.globalVolume;
-            footstep.play().catch(e => console.log('Footstep error:', e));
         }
-
-        // コンポーネントのアンマウント（画面遷移等）で音を止める
-        return () => {
-            if (footstep) {
-                footstep.pause();
-            }
-        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showCountdown, pendingResultRoom?.lastRoundCaught, otherPlayerInfo?.drawnImage]);
 
