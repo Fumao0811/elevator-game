@@ -63,6 +63,11 @@ function Game({ appState }: Props) {
         if (showCountdown && countdownNum === 0 && pendingResultRoom && !doorsOpening) {
             console.log('Door Transition: Triggering transition sequence');
             setDoorsOpening(true);
+
+            // エレベーターが開く時の「チーン」という音を鳴らす
+            const chimeAudio = new Audio('/se_elevator_chime.mp3');
+            chimeAudio.volume = appState.globalVolume;
+            chimeAudio.play().catch(e => console.log('Chime error:', e));
             
             // 演出時間を設定。ジャンプスケアがある場合は長めに、ない場合は標準的に。
             const delay = pendingResultRoom.lastRoundCaught ? 4500 : 3000;
