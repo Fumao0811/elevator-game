@@ -8,6 +8,7 @@ function Result({ appState }: Props) {
     const [showScare, setShowScare] = useState(false);
     const [isWaitingNext, setIsWaitingNext] = useState(false);
     const scareAudioRef = useRef<HTMLAudioElement | null>(null);
+    const hasPlayedScareRef = useRef(false);
     const [timeLeft, setTimeLeft] = useState(5);
     const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
@@ -17,7 +18,8 @@ function Result({ appState }: Props) {
 
     useEffect(() => {
         if (!socket || !room) { navigate('/'); return; }
-        if (isCaught) {
+        if (isCaught && !hasPlayedScareRef.current) {
+            hasPlayedScareRef.current = true;
             setShowScare(true);
             if (!scareAudioRef.current) {
                 // 使わなくなった scare_sound.mp3 を削除し、scare_sound_escape.mp3 に統一
