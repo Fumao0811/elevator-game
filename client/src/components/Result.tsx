@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
 interface Props { appState: AppState; }
@@ -7,7 +7,6 @@ function Result({ appState }: Props) {
     const { socket, room, nickname } = appState;
     const [showScare, setShowScare] = useState(false);
     const [isWaitingNext, setIsWaitingNext] = useState(false);
-    const scareAudioRef = useRef<HTMLAudioElement | null>(null);
     const [timeLeft, setTimeLeft] = useState(5);
     const myPlayerInfo = room?.players.find((p: any) => p.nickname === nickname);
     const otherPlayerInfo = room?.players.find((p: any) => p.nickname !== nickname);
@@ -19,13 +18,6 @@ function Result({ appState }: Props) {
         if (!socket || !room) { navigate('/'); return; }
         if (isCaught) {
             setShowScare(true);
-            if (!scareAudioRef.current) {
-                // 使わなくなった scare_sound.mp3 を削除し、scare_sound_escape.mp3 に統一
-                scareAudioRef.current = new Audio('/scare_sound_escape.mp3');
-            }
-            // 右上の音量設定をジャンプスケア音にも適用（さらに音量を大幅に下げる 例: 30%）
-            scareAudioRef.current.volume = Math.max(0, appState.globalVolume * 0.3);
-            scareAudioRef.current.play().catch(e => console.log('Audio autoplay prevented:', e));
 
             // ジャンプスケア画面の表示時間
             setTimeout(() => {

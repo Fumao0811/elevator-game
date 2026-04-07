@@ -41,10 +41,6 @@ function Game({ appState }: Props) {
     const handleFloorSelect = (floor: number) => {
         if (isWaiting || showCountdown || floor === forbiddenFloor || splashStep === 1) return;
 
-        // ★ここでも念のためボタンクリック時にサウンド再生権限をブロック解除させておく
-        const dummyAudio = new Audio('/scare_sound_escape.mp3');
-        dummyAudio.volume = 0;
-        dummyAudio.play().then(() => { dummyAudio.pause(); dummyAudio.currentTime = 0; }).catch(e => console.log('Audio Blocked:', e));
         setSelectedFloor(floor);
         socket?.emit('select_floor', { roomId: room.roomId, floor });
         setIsWaiting(true);

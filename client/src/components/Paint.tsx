@@ -146,10 +146,6 @@ const Paint: React.FC<Props> = ({ appState }) => {
         if (isSubmitted || !socket || !room) return;
         setIsSubmitted(true);
 
-        const dummyAudio = new Audio('/scare_sound.mp3');
-        dummyAudio.volume = 0;
-        dummyAudio.play().then(() => { dummyAudio.pause(); dummyAudio.currentTime = 0; }).catch(e => console.log('Audio Blocked:', e));
-        
         const bgCanvas = bgCanvasRef.current;
         const drawCanvas = drawCanvasRef.current;
         if (bgCanvas && drawCanvas) {
