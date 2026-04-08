@@ -20,7 +20,7 @@ const Paint: React.FC<Props> = ({ appState }) => {
     const [splashStep, setSplashStep] = useState(1);
     
     // Outline & UI State
-    const [selectedOutline, setSelectedOutline] = useState<string>('none');
+    const [selectedOutline, setSelectedOutline] = useState<string>('round');
     const [outlineBgColor, setOutlineBgColor] = useState<string>('#ffffff');
     const [tab, setTab] = useState<'outline' | 'paint'>('outline');
     
@@ -189,8 +189,8 @@ const Paint: React.FC<Props> = ({ appState }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginTop: '10px', backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', width: '100%', maxWidth: '400px' }}>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <span style={{ color: '#aaa', fontSize: '0.9rem', width: '100%', textAlign: 'center' }}>輪郭の種類:</span>
-                        {['none', 'round', 'oval', 'alien', 'ghost'].map(type => {
-                            const labels: Record<string, string> = { none: 'なし', round: '丸顔', oval: '卵型', alien: '宇宙人', ghost: 'おばけ' };
+                        {['round', 'oval', 'alien', 'ghost', 'none'].map(type => {
+                            const labels: Record<string, string> = { round: '丸顔', oval: '卵型', alien: '宇宙人', ghost: 'おばけ', none: 'なし' };
                             return (
                                 <button key={type} onClick={() => setSelectedOutline(type)} style={{ padding: '6px 12px', backgroundColor: selectedOutline === type ? '#fff' : '#444', color: selectedOutline === type ? '#000' : '#fff', border: '2px solid #555', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>{labels[type]}</button>
                             );
