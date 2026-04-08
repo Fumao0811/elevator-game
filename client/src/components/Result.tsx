@@ -107,16 +107,20 @@ function Result({ appState }: Props) {
         answerText = `あなた(待伏): ${room.lastWaitedFloor}F 🆚 ${otherPlayerInfo.nickname}(逃走): ${room.lastEscapedFloor}F`;
     }
     let finalResultText = '';
+    let isWinner = false;
+    let isDraw = false;
+    let myScore = myPlayerInfo.score;
+    let opponentScore = otherPlayerInfo?.score || 0;
     if (isFinished) {
-        if (room.winner === myPlayerInfo.id) finalResultText = '🏆 WINNER 🏆';
-        else if (room.winner === 'DRAW') finalResultText = '🤝 DRAW 🤝';
+        if (room.winner === myPlayerInfo.id) { finalResultText = '🏆 WINNER 🏆'; isWinner = true; }
+        else if (room.winner === 'DRAW') { finalResultText = '🤝 DRAW 🤝'; isDraw = true; }
         else finalResultText = '💀 LOSER 💀';
     }
     const generateShareText = () => {
-        const title = "🚪 エレベーター心理戦ゲーム\n";
-        const result = isFinished ? `最終スコア: ${myPlayerInfo.score}pt (${finalResultText})\n` : `【今回の結果】${resultText} ${resultSubText}\n`;
+        const title = "🚪 ドロー＆エスケープ\n";
+        const result = `【${myScore} - ${opponentScore}】で${isWinner ? 'あなたの勝利！🎉' : isDraw ? '引き分け！🤝' : 'あなたの負け！💀'}\n`;
         const url = window.location.origin;
-        return encodeURIComponent(title + result + "\n#エレベーター心理戦 #ブラウザゲーム\n" + url);
+        return encodeURIComponent(title + result + "\n#ドロー＆エスケープ #ブラウザゲーム\n" + url);
     };
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${generateShareText()}`;
 

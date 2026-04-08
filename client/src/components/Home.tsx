@@ -22,8 +22,8 @@ function Home({ appState }: Props) {
     return (
         <div className="screen-container" style={{ justifyContent: 'flex-start', paddingTop: '10vh', gap: '15px' }}>
             <div>
-                <h1 className="horror-font-title fx-flicker" style={{ fontSize: '2.8rem', marginBottom: '10px', color: '#ff2a3a', textShadow: '0 0 15px red' }}>
-                    ELEVATOR
+                <h1 className="horror-font-title fx-flicker" style={{ fontSize: '2.4rem', marginBottom: '10px', color: '#ff2a3a', textShadow: '0 0 15px red', whiteSpace: 'nowrap' }}>
+                    DRAW & ESCAPE
                 </h1>
                 <p className="horror-font" style={{ color: '#aaa', fontSize: '1.2rem', letterSpacing: '4px' }}>
                     心理戦コメディホラー
