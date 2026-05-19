@@ -88,7 +88,7 @@ const Paint: React.FC<Props> = ({ appState }) => {
         }
         ctx.fill();
         ctx.stroke();
-    }, [selectedOutline, outlineBgColor]);
+    }, [selectedOutline, outlineBgColor, splashStep]);
 
     useEffect(() => {
         const drawCanvas = drawCanvasRef.current;

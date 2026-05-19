@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { AppState } from '../App';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
 
 const Match: React.FC<Props> = ({ appState }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [statusText, setStatusText] = useState('サーバーに接続中...');
     const { socket, nickname } = appState;
 
@@ -17,17 +18,28 @@ const Match: React.FC<Props> = ({ appState }) => {
             return;
         }
 
-        // サーバーにマッチングリクエストを送信
-        socket.emit('join_random_match', nickname);
+        const roomCode = location.state?.roomCode;
+
+        if (roomCode) {
+            setStatusText(`合言葉「${roomCode}」で待機中...`);
+            socket.emit('join_room_match', { nickname, roomCode });
+        } else {
+            setStatusText('対戦相手を探しています...');
+            socket.emit('join_random_match', nickname);
+        }
 
         // 待機中イベントのハンドリング
         socket.on('waiting_for_match', () => {
-            setStatusText('対戦相手を探しています...');
+            if (roomCode) {
+                setStatusText(`合言葉「${roomCode}」で相手を待っています...`);
+            } else {
+                setStatusText('対戦相手を探しています...');
+            }
         });
 
         // マッチング成功イベントのハンドリング
         const handleMatchFound = () => {
-            navigate('/battle');
+            navigate('/paint');
         };
         socket.on('match_found', handleMatchFound);
 
@@ -35,7 +47,7 @@ const Match: React.FC<Props> = ({ appState }) => {
             socket.off('waiting_for_match');
             socket.off('match_found', handleMatchFound);
         };
-    }, [socket, nickname, navigate]);
+    }, [socket, nickname, navigate, location.state]);
 
     return (
         <div className="screen-container">

@@ -77,6 +77,7 @@ const PORT = process.env.PORT || 3001;
 // メモリ上でルームとマッチング状況を管理
 const rooms = new Map<string, Room>();
 let waitingPlayer: Player | null = null; // ランダムマッチ待機中のプレイヤー
+const roomMatchWaitingPlayers = new Map<string, Player>(); // 合言葉 -> 待機中のPlayer
 
 const generateRoomId = () => Math.random().toString(36).substring(2, 9);
 
@@ -142,6 +143,73 @@ io.on('connection', (socket: Socket) => {
             waitingPlayer = player;
             socket.emit('waiting_for_match');
             console.log(`User ${nickname} is waiting for match`);
+        }
+    });
+
+    // 合言葉マッチング（ルームマッチ）参加
+    socket.on('join_room_match', ({ nickname, roomCode }: { nickname: string, roomCode: string }) => {
+        const cleanCode = roomCode.trim().toLowerCase();
+        if (!cleanCode) return;
+
+        const player: Player = {
+            id: socket.id,
+            nickname,
+            role: null,
+            score: 0,
+            isReady: false,
+            selectedFloor: null,
+            lastEscapedFloor: null,
+            lastWaitedFloor: null,
+            drawnImage: null,
+        };
+
+        const existingWaitingPlayer = roomMatchWaitingPlayers.get(cleanCode);
+
+        if (existingWaitingPlayer && existingWaitingPlayer.id !== socket.id) {
+            // マッチング成立
+            const roomId = generateRoomId();
+
+            // 役割のランダム割り当て
+            const isEscapeFirst = Math.random() > 0.5;
+            player.role = isEscapeFirst ? 'ESCAPE' : 'WAIT';
+            existingWaitingPlayer.role = isEscapeFirst ? 'WAIT' : 'ESCAPE';
+
+            player.lastEscapedFloor = null;
+            player.lastWaitedFloor = null;
+            existingWaitingPlayer.lastEscapedFloor = null;
+            existingWaitingPlayer.lastWaitedFloor = null;
+
+            const newRoom: Room = {
+                roomId,
+                players: [existingWaitingPlayer, player],
+                status: 'DRAWING', // マッチング直後は絵を描くフェーズから開始
+                round: 1,
+                turn: 1, // 1を表、2を裏とみなす
+                maxRounds: 5,
+                winner: null,
+                lastRoundCaught: null,
+                lastEscapedFloor: null,
+                lastWaitedFloor: null,
+                history: [],
+            };
+
+            rooms.set(roomId, newRoom);
+
+            // お互いをルームに参加させる
+            io.sockets.sockets.get(existingWaitingPlayer.id)?.join(roomId);
+            socket.join(roomId);
+
+            // マッチング成立を通知
+            io.to(roomId).emit('match_found', newRoom);
+
+            console.log(`Room Match Found: Room ${roomId} for code ${cleanCode}`);
+            roomMatchWaitingPlayers.delete(cleanCode); // 待機状態をリセット
+
+        } else {
+            // 誰も待機していなければ待機室に入る
+            roomMatchWaitingPlayers.set(cleanCode, player);
+            socket.emit('waiting_for_match');
+            console.log(`User ${nickname} is waiting for room match with code ${cleanCode}`);
         }
     });
 
@@ -319,6 +387,15 @@ io.on('connection', (socket: Socket) => {
 
         if (waitingPlayer && waitingPlayer.id === socket.id) {
             waitingPlayer = null;
+        }
+
+        // 合言葉マッチング待機リストから削除
+        for (const [code, p] of roomMatchWaitingPlayers.entries()) {
+            if (p.id === socket.id) {
+                roomMatchWaitingPlayers.delete(code);
+                console.log(`Removed ${p.nickname} from waiting room code ${code}`);
+                break;
+            }
         }
 
         // ルームに入っていた場合の処理
