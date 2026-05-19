@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://elevator-game-xg6a.onrender.com/sitemap.xml
