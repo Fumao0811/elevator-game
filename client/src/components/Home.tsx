@@ -46,10 +46,10 @@ function Home({ appState }: Props) {
             }}>
                 <p style={{ fontWeight: 'bold', color: '#ff4a5a', marginBottom: '10px', textAlign: 'center', fontSize: '1rem', letterSpacing: '2px' }}>【 ルール説明 】</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <p style={{ margin: 0 }}>📍 <strong style={{ color: '#fff' }}>全5ラウンド（表・裏交替）</strong>の合計スコア勝負！</p>
-                    <p style={{ margin: 0 }}>🏃 <span style={{ color: '#4aff4a', fontWeight: 'bold' }}>逃げる側(中)</span>：1〜5階から逃げる！<br /><span style={{ fontSize: '0.75rem', color: '#ffaaaa', marginLeft: '1.5rem', fontWeight: 'bold' }}>※逃げる側が前回選んだ階は両者選べません</span></p>
-                    <p style={{ margin: 0 }}>🔪 <span style={{ color: '#ff4a5a', fontWeight: 'bold' }}>待ち伏せ(外)</span>：相手が降りる階を予想して待ち伏せる！</p>
-                    <p style={{ margin: 0 }}>🎨 <strong style={{ color: '#fff' }}>おばけの絵(30秒)</strong>：捕まえた時に相手を驚かす絵を描く！<br />⏳ <strong style={{ color: '#fff' }}>階層選択(30秒)</strong>：時間切れになるとランダム選択！<br />🚪 捕まると……描いた絵が相手を襲う！</p>
+                    <p style={{ margin: 0 }}><strong style={{ color: '#fff' }}>全5ラウンド（表・裏交替）</strong>の合計スコア勝負！</p>
+                    <p style={{ margin: 0 }}><span style={{ color: '#4aff4a', fontWeight: 'bold' }}>逃げる側(中)</span>：1〜5階から逃げる！<br /><span style={{ fontSize: '0.75rem', color: '#ffaaaa', marginLeft: '1.5rem', fontWeight: 'bold' }}>※逃げる側が前回選んだ階は両者選べません</span></p>
+                    <p style={{ margin: 0 }}><span style={{ color: '#ff4a5a', fontWeight: 'bold' }}>待ち伏せ(外)</span>：相手が降りる階を予想して待ち伏せる！</p>
+                    <p style={{ margin: 0 }}><strong style={{ color: '#fff' }}>おばけの絵(30秒)</strong>：捕まえた時に相手を驚かす絵を描く！<br /><strong style={{ color: '#fff' }}>階層選択(30秒)</strong>：時間切れになるとランダム選択！<br />捕まると……描いた絵が相手を襲う！</p>
                 </div>
             </div>
 
