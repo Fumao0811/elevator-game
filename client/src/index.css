@@ -278,33 +278,7 @@ h3 {
   animation: flicker 4s infinite alternate;
 }
 
-/* クリックエフェクト用 (花) */
-.click-flower {
-  position: fixed;
-  pointer-events: none;
-  /* 下の要素のクリックを阻害しない */
-  z-index: 99999;
-  font-size: 2rem;
-  transform: translate(-50%, -50%);
-  animation: flowerFadeOut 0.8s ease-out forwards;
-}
 
-@keyframes flowerFadeOut {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
-  }
-
-  20% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.2) rotate(45deg);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.5) rotate(90deg);
-  }
-}
 
 /* Background Animations for Game UI */
 @keyframes slowZoom {

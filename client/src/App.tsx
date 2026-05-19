@@ -50,32 +50,13 @@ function MainApp() {
     };
   }, []);
 
-  // 画面クリック時の花エフェクト・タップ音追加
+  // 画面クリック時のタップ音追加
   useEffect(() => {
-    const handleGlobalClick = (e: MouseEvent) => {
-      // 花の要素を作成
-      const flower = document.createElement('div');
-      flower.className = 'click-flower';
-      flower.innerText = '🌸'; // 使う絵文字
-
-      // クリックした位置に配置
-      flower.style.left = `${e.clientX}px`;
-      flower.style.top = `${e.clientY}px`;
-
-      // bodyに追加
-      document.body.appendChild(flower);
-
+    const handleGlobalClick = () => {
       // タップ音を鳴らす
       const tapAudio = new Audio('/se_tap.mp3');
       tapAudio.volume = Math.max(0, Math.min(1, 0.5 * globalVolume)); // 0.5はベースの音量
       tapAudio.play().catch(err => console.log('Tap Audio prevented:', err));
-
-      // アニメーションが終わる頃(0.8秒後)に要素を削除
-      setTimeout(() => {
-        if (flower.parentNode) {
-          flower.parentNode.removeChild(flower);
-        }
-      }, 800);
     };
 
     window.addEventListener('click', handleGlobalClick);
